@@ -1,5 +1,7 @@
 # codepiece-hackathon
 
+![CodePiece — swipe UI with a code snippet card, Skip and Like](docs/codepiece-ui.png)
+
 Hackathon workspace for **CodePiece** — a swipe-based game for discovering and rating code snippets.
 
 This repo uses **[Bun](https://bun.com)** as the **package manager** and runtime for scripts: **`bun install`**, **`bun test`**, **`bun run scan`**, and **`bun run`** for Next.js. Do not use npm, yarn, or pnpm for installs (they will not respect **`bun.lock`**).
