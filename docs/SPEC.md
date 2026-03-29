@@ -56,3 +56,7 @@ A fun, Tinder-like game for exploring and learning code by swiping through code 
 ## Naming note
 
 The working name in this spec is **CodePiece**. The repository identifier is **codepience-hackathon** (as chosen for the hackathon workspace).
+
+## See also
+
+- **[`GUARDRAILS.md`](GUARDRAILS.md)** — constraints and anti-patterns (what not to build or optimize for).
