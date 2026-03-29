@@ -82,6 +82,7 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 
 ## See also
 
+- [`COMMANDS.md`](COMMANDS.md) — **`bun run …`** scripts (quick reference).  
 - [`TECHNICAL.md`](TECHNICAL.md) — stack, DB ownership, environment variables.  
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — ports, Docker, scan, UI.  
 - [`plan/INITIAL.md`](../plan/INITIAL.md) — feature checklist and **Implementation status**.  

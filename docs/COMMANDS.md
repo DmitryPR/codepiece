@@ -24,7 +24,7 @@ Run from the **repository root** with **[Bun](https://bun.com)**. Install: **`bu
 | **`CODEPIECE_DB`** | SQLite file path | `data/codepiece.db` |
 | **`TARGET_REPO`** | Tree to scan (`bun run scan`) | (required for scan unless using **`seed:samples`**) |
 
-Full env table: **[`docs/TECHNICAL.md`](../docs/TECHNICAL.md)**. Ports, Docker, **`scan --force`**: **[`docs/TROUBLESHOOTING.md`](../docs/TROUBLESHOOTING.md)**. Tests: **[`docs/TEST-SPEC.md`](../docs/TEST-SPEC.md)**.
+Full env table: **[`TECHNICAL.md`](TECHNICAL.md)**. Ports, Docker, **`scan --force`**: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**. Tests: **[`TEST-SPEC.md`](TEST-SPEC.md)**.
 
 ## Typical flows
 

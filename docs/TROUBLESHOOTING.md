@@ -75,6 +75,7 @@ Hosted deploy is not automated in this repo — see **[`plan/PRODUCTION.md`](../
 
 ## See also
 
+- **[COMMANDS.md](COMMANDS.md)** — **`bun run …`** scripts (quick reference)  
 - **[README.md](../README.md)** — quick start, build and run  
 - **[TEST-SPEC.md](TEST-SPEC.md)** — tests and manual smoke  
 - **[TECHNICAL.md](TECHNICAL.md)** — env vars, SQLite, Docker overview  
