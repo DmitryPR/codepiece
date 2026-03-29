@@ -37,42 +37,87 @@ export function SwipeClient() {
 
   const loadNext = useCallback(async () => {
     setErr(null);
-    const r = await fetch('/api/cards/next', { credentials: 'include' });
+    let r = await fetch('/api/cards/next', { credentials: 'include' });
     if (r.status === 401) {
-      setUserReady(false);
+      // One retry: cookie can lag right after POST /api/users; avoid false "session" errors.
+      await new Promise((res) => setTimeout(res, 30));
+      r = await fetch('/api/cards/next', { credentials: 'include' });
+    }
+    if (r.status === 401) {
+      // Never set userReady false here — that left the UI stuck on "Loading…".
+      setUserReady(true);
       setCard(null);
+      setErr('Session missing. Refresh the page.');
       return;
     }
     if (!r.ok) {
+      setUserReady(true);
+      setCard(null);
       setErr(await r.text());
       return;
     }
-    const j = (await r.json()) as { card: Card | null };
-    setCard(j.card);
+    try {
+      const j = (await r.json()) as { card?: Card | null };
+      setCard(j.card ?? null);
+    } catch {
+      setUserReady(true);
+      setCard(null);
+      setErr('Invalid response from server');
+    }
   }, []);
 
   useEffect(() => {
+    let alive = true;
     (async () => {
-      const r = await fetch('/api/cards/next', { credentials: 'include' });
-      if (r.status !== 401) {
+      try {
+        const r = await fetch('/api/cards/next', { credentials: 'include' });
+        if (!alive) return;
+
+        if (r.status === 401) {
+          const c = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+            credentials: 'include',
+          });
+          if (!alive) return;
+          if (!c.ok) {
+            setErr('Could not create session');
+            setUserReady(true);
+            setCard(null);
+            return;
+          }
+          setUserReady(true);
+          // Let Set-Cookie be applied before the next request (avoids 401 → stuck loading).
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          if (!alive) return;
+          await loadNext();
+          return;
+        }
+
+        if (!r.ok) {
+          const t = await r.text();
+          if (!alive) return;
+          setUserReady(true);
+          setCard(null);
+          setErr(t || `Request failed (${r.status})`);
+          return;
+        }
+
+        const j = (await r.json()) as { card?: Card | null };
+        if (!alive) return;
         setUserReady(true);
-        const j = (await r.json()) as { card: Card | null };
-        setCard(j.card);
-        return;
+        setCard(j.card ?? null);
+      } catch (e) {
+        if (!alive) return;
+        setUserReady(true);
+        setCard(null);
+        setErr(e instanceof Error ? e.message : 'Network error');
       }
-      const c = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-        credentials: 'include',
-      });
-      if (!c.ok) {
-        setErr('Could not create session');
-        return;
-      }
-      setUserReady(true);
-      await loadNext();
     })();
+    return () => {
+      alive = false;
+    };
   }, [loadNext]);
 
   const swipe = async (action: 'like' | 'skip') => {
@@ -115,6 +160,11 @@ export function SwipeClient() {
 
   const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
     if (e.button !== 0) return;
+    // Do not capture when the gesture starts on controls: capture retargets pointerup to the
+    // article and the button never receives a full click — Skip/Like would not fire.
+    const t = e.target as HTMLElement | null;
+    if (t?.closest('button, a, input, textarea, select, [role="button"]')) return;
+
     e.currentTarget.setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
     dragActiveRef.current = true;
