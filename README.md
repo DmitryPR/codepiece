@@ -61,13 +61,15 @@ bun test
 
 ### Docs
 
+- **[`AGENTS.md`](AGENTS.md)** (repo root) — shortcut to agent guidance; full text in **`docs/AGENTS.md`**  
 - **[`docs/COMMANDS.md`](docs/COMMANDS.md)** — **`bun run …`** cheat sheet (agents: start with **`docs/AGENTS.md`**)  
 - **[`docs/TEST-SPEC.md`](docs/TEST-SPEC.md)** — test commands and DB/runtime notes  
 - **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)** — ports, Docker, scan, UI quirks  
 - **[`docs/SPEC.md`](docs/SPEC.md)** — product specification  
 - **[`docs/GUARDRAILS.md`](docs/GUARDRAILS.md)** — what not to do (product guardrails)  
 - **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)** — stack, storage, ingestion, Docker overview  
-- **[`docs/AGENTS.md`](docs/AGENTS.md)** — how to use these docs as a coding agent (includes internal **plan/** read order for implementers)
+- **[`docs/AGENTS.md`](docs/AGENTS.md)** — how to use these docs as a coding agent (includes **plan/** read order for implementers)  
+- **[`plan/v1-plan.md`](plan/v1-plan.md)** — execution checklist and API surface
 
 ### AI tooling (Cursor / agents)
 
@@ -79,7 +81,7 @@ Parts of this repo are **adapted from [everything-claude-code](https://github.co
 | **[`.cursor/skills/`](.cursor/skills/)** | Optional workflows (e.g. Bun runtime, Next.js Turbopack, documentation lookup). |
 | **[`agents/`](agents/)** | Subagent-style prompts (e.g. planner, TypeScript reviewer). |
 
-Use them together with **`docs/AGENTS.md`**. CodePiece-specific docs (**`docs/GUARDRAILS.md`**, **`plan/INITIAL.md`**, **`docs/TEST-SPEC.md`**) win if anything conflicts with generic upstream guidance.
+Use them together with **`docs/AGENTS.md`** (or root **`AGENTS.md`**). CodePiece-specific docs (**`docs/GUARDRAILS.md`**, **`plan/v1-plan.md`**, **`docs/TEST-SPEC.md`**) win if anything conflicts with generic upstream guidance.
 
 ## Sample scan targets
 

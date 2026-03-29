@@ -60,13 +60,13 @@ Or: `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force` if you need 
 
 | File | Covers |
 |------|--------|
-| `api-routes.test.ts` | **Route handlers** imported directly: seed `:memory:` DB + `GET /api/cards/next` (cookie session) + `POST /api/swipes` persistence + empty deck after swipe + 400 on bad action; `GET /api/dashboard/stats` (session-scoped likes/skips/memos + global card count). |
+| `api-routes.test.ts` | **Route handlers** imported directly: seed `:memory:` DB + `GET /api/cards/next` (cookie session, **`memo`** field) + `PUT /api/cards/memo` (set/clear) + `POST /api/swipes` persistence + empty deck after swipe + 400 on bad action; `GET /api/dashboard/stats` (session-scoped likes/skips/memos + global card count). |
 
 These tests **do not** start the HTTP server; they call `GET`/`POST` exported functions with `Request` objects.
 
 ## UI
 
-The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it depends on. Optional follow-up: Playwright or component tests with `happy-dom` — not required for v1 in this repo.
+The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it depends on. Optional follow-up: Playwright or component tests with `happy-dom` — not required in this repo unless you add them.
 
 ## Manual smoke (after scan + dev)
 
@@ -85,6 +85,6 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 - [`COMMANDS.md`](COMMANDS.md) — **`bun run …`** scripts (quick reference).  
 - [`TECHNICAL.md`](TECHNICAL.md) — stack, DB ownership, environment variables.  
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — ports, Docker, scan, UI.  
-- [`plan/INITIAL.md`](../plan/INITIAL.md) — feature checklist and **Implementation status**.  
+- [`plan/v1-plan.md`](../plan/v1-plan.md) — feature checklist and **Implementation status**.  
 - [`plan/PRODUCTION.md`](../plan/PRODUCTION.md) — production Docker / Compose rollout (not covered by automated tests here).  
 - [`AGENTS.md`](AGENTS.md) — doc read order for implementers.

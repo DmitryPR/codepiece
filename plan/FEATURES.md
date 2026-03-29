@@ -1,84 +1,88 @@
-# CodePiece — feature backlog (SPEC gaps and future work)
+# CodePiece — implementation map and backlog
 
-Single place for **product and UX work** that goes beyond the shipped **v1** checklist in **[`INITIAL.md`](INITIAL.md)**. It maps **[`docs/SPEC.md`](../docs/SPEC.md)** to the current codebase: what is **missing**, **partial**, or **deferred on purpose**.
-
-**How this fits**
-
-- **[`docs/SPEC.md`](../docs/SPEC.md)** — long-term intent and mechanics (broader than v1).
-- **[`INITIAL.md`](INITIAL.md)** — **v1 execution contract** (what was built for the hackathon slice).
-- **This file** — backlog for **post-v1** and **SPEC-shaped** work that is not yet implemented.
-- **[`PRODUCTION.md`](PRODUCTION.md)** — **deploy / ops** (image, Compose, CI), not user-facing features.
-
-When **SPEC** and **INITIAL** disagree, **INITIAL + [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)** still govern **what ships in v1**. Use **FEATURES** to queue **next** work; update this doc when you commit to a scope.
+**[`docs/SPEC.md`](../docs/SPEC.md)** is the **high-level product spec** (intent and mechanics only). **This file** ties that spec to **this repository**: what is **implemented**, what is **only partially** there, and what is **not built** or deferred. Execution checklist and agent order live in **[`v1-plan.md`](v1-plan.md)**; deploy and ops in **[`PRODUCTION.md`](PRODUCTION.md)**.
 
 ```mermaid
 flowchart LR
-  spec[docs_SPEC]
-  initial[plan_INITIAL_v1]
-  features[plan_FEATURES_backlog]
+  spec[docs_SPEC_product]
+  plan[plan_v1_plan_checklist]
+  features[plan_FEATURES_map]
   prod[plan_PRODUCTION_ops]
-  spec --> initial
-  initial --> features
-  prod -.->|"parallel track"| features
+  spec --> plan
+  plan --> features
+  prod -.->|"parallel"| features
 ```
 
-## From SPEC — not implemented or only partial
+## Implemented in this repository
+
+Mapped to **[`docs/SPEC.md`](../docs/SPEC.md)** sections where relevant.
+
+**Interaction (swipe)** — Like and skip are persisted per user (`POST /api/swipes`, **`swipes`** table). Next card (`GET /api/cards/next`) excludes cards the user has already swiped ([`src/lib/feed.ts`](../src/lib/feed.ts) — `pickNextCard`, `notInArray` on prior swipe `card_id`s). Anonymous session users (`POST /api/users`, cookie). Card stack UI: pointer drag plus Skip/Like buttons ([`app/swipe-client.tsx`](../app/swipe-client.tsx)); **`user-select: none`** on the card so drag does not select text; copy is explicit via control only.
+
+**Snippet memo** — Optional private note per **(user, card)**, max **600** Unicode code points: table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`src/db/init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`memo`** on **`GET /api/cards/next`**; validation [`src/lib/memo.ts`](../src/lib/memo.ts); [`getMemoBody` / `setMemoBody`](../src/lib/feed.ts) in feed. UI: copy icon then memo icon on the title row → popover with textarea, **`n/600`**, Save; popover excluded from swipe capture ([`app/swipe-client.tsx`](../app/swipe-client.tsx)).
+
+**Copy snippet** — Title-row control copies **`snippet_text`** (`CopySnippetButton`, Clipboard API + `execCommand` fallback).
+
+**Session stats and personal rankings** — **[`GET /api/dashboard/stats`](../app/api/dashboard/stats/route.ts)** returns session-scoped aggregates from SQLite ([`src/lib/dashboard-stats.ts`](../src/lib/dashboard-stats.ts)): your likes, skips, memos, count of cards with a memo, **topByLikes** (your per-card like counts), and global **cards** row count (“snippets in deck”). Header **Stats** opens a slide-over panel ([`app/app-shell.tsx`](../app/app-shell.tsx)); optional **Library** sidebar in [`app/swipe-client.tsx`](../app/swipe-client.tsx) shows a compact top-by-likes preview. After a **like**, stats refetch; the row for that card is **highlighted** and order may update (no CSS motion animations). Rows: symbol, `repo_label`, path only — no author leaderboard ([`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)).
+
+**Feed ordering** — Next card selection still uses **`RANDOM()`** in [`feed.ts`](../src/lib/feed.ts); dashboard stats do **not** bias **`pickNextCard`**.
+
+**Theme** — [`app/theme-picker.tsx`](../app/theme-picker.tsx) in the app chrome ([`app/app-shell.tsx`](../app/app-shell.tsx)).
+
+**Ingestion and cards** — Local **`bun run scan`** writes **`cards`**; Next.js reads them only. Heuristics for size, context, path filters per [`docs/TECHNICAL.md`](../docs/TECHNICAL.md).
+
+## Partial relative to the product spec
+
+These areas match the **spirit** of the spec only in part; details above are authoritative for this repo.
+
+- **Internal rating (SPEC §5)** — You get **personal** aggregates and a ranked list of **your** likes, not a global “good code” or popularity system, and not feed ranking from ratings.
+- **Learning feedback loop (SPEC §4)** — Likes, skips, and “already swiped” are tracked; there is **no** impression-only “seen without swipe” store, **no** dedicated history or export of a learning trail.
+- **Discovery (SPEC §1)** — “Quality” is mostly **ingestion** heuristics, not a scored or ranked discovery feed.
+
+## Not implemented or deferred
 
 ### Matching (owners / committers)
 
-- **SPEC:** “Match users with code owners / committers” for learning or collaboration.
-- **Now:** **Explicitly out of v1** in [`INITIAL.md`](INITIAL.md) — no OAuth, no contact flows.
-- **Backlog:** Future **epic** only: opt-in identity, consent, channels that satisfy **[`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)** (privacy, no unsolicited contact). No implementation until there is an explicit product decision.
+- **SPEC:** Match users with code owners or committers for learning or collaboration.
+- **Status:** Out of scope for this hackathon slice — no OAuth, no contact flows ([`v1-plan.md`](v1-plan.md)).
+- **Backlog:** Future epic only: opt-in identity, consent, channels per **[`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)**.
 
-### Learning feedback loop (history, what was seen / liked)
+### Learning loop — remaining gaps
 
-- **SPEC:** Store history of viewed code; track likes, dislikes, and what was already seen.
-- **Now:** Every **like/skip** is stored in **`swipes`**; **[`pickNextCard`](../src/lib/feed.ts)** excludes cards the user has already **swiped** (`notInArray` on swipe `card_id`s). There is **no** impression-only “seen without swipe” table, **no** history or “your likes” UI, **no** export of a learning trail.
-- **Backlog:** Optional **`user_card_seen`** (or analytics events) if you need feed logic without a final swipe; UI for **session history** or **saved likes**; teaching aids (e.g. “why this snippet”) tied to GUARDRAILS.
+- Optional **`user_card_seen`** (or analytics) if feed logic needs impressions without a final swipe.
+- UI for **session history**, **saved likes** browse, or **export** of a trail.
+- Teaching aids (e.g. “why this snippet”) aligned with GUARDRAILS.
 
-### Internal rating system (“good” / popular code)
+### Internal rating — remaining gaps
 
-- **SPEC:** System to judge which code is good, popular, or valuable.
-- **Partially shipped:** **`GET /api/dashboard/stats`** ([`app/api/dashboard/stats/route.ts`](../app/api/dashboard/stats/route.ts)) returns **session-scoped** aggregates from SQLite via [`dashboard-stats.ts`](../src/lib/dashboard-stats.ts): **your** likes/skips/memos and **your** per-card like counts for the ranked list; **snippets in deck** is still the global **`cards`** row count. The **topbar Stats** panel ([`app/app-shell.tsx`](../app/app-shell.tsx)) shows these metrics; after a **like**, the list **refetches** and the row can **reorder** (highlighted row, no motion animations). Rows show **symbol + `repo_label` + path** only (GUARDRAILS: no author leaderboard).
-- **Still random feed:** Next card order remains **`RANDOM()`** in [`feed.ts`](../src/lib/feed.ts) — the dashboard does **not** change **`pickNextCard`**.
-- **Backlog:** Spam / novelty guards; optional **score-biased** feed once product explicitly opts in; richer history UI.
+- Spam / novelty guards; **score-biased** feed if product explicitly opts in; richer history UI.
 
-### Discovery (“attractive or high-quality” surfacing)
+### Discovery — remaining gaps
 
-- **SPEC:** Surface attractive or high-quality code.
-- **Now:** “Quality” is mostly **ingestion** heuristics (size limits, JSDoc/heuristic context, path filters) — not a scored feed.
-- **Backlog:** Connect discovery to **internal ratings** and safer ranking when that layer exists.
+- Connect surfacing to internal ratings and safer global ranking when that layer exists.
 
-### Snippet memo (600-character personal note per card)
+### Snippet memo — optional follow-ups
 
-- **SPEC:** Users can leave an optional **memo** on a snippet — max **600** Unicode **code points**, private-by-default for **(user, card)**.
-- **Shipped:** Table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`memo`** on **`GET /api/cards/next`**; UI **copy icon** then **memo (lined-note) icon** on the card title row opens a **popover** with **textarea + Save** ([`app/swipe-client.tsx`](../app/swipe-client.tsx)); validation in [`src/lib/memo.ts`](../src/lib/memo.ts); **`getMemoBody` / `setMemoBody`** in [`src/lib/feed.ts`](../src/lib/feed.ts).
-- **Follow-ups (optional):** rate limits; listing “all my memos”; grapheme-cluster length if you need stricter emoji counting than code points.
+- Rate limits; “all my memos” listing; stricter grapheme-cluster length for emoji if needed.
 
-## From INITIAL — optional / later (implementation polish)
+## Optional polish (not blocking ship)
 
-These were listed under **“Optional / later (not blocking v1)”** in [`INITIAL.md`](INITIAL.md); details stay here so **FEATURES** is the **single backlog index**.
+Indexed here as the single backlog list; [`v1-plan.md`](v1-plan.md) **Implementation status** points to **FEATURES** for these items.
 
-- **`.tsx`** ingestion (JSX noise vs `.ts`-only v1).
-- **Display name** on **`POST /api/users`** surfaced in the **UI** (API may already accept it).
-- Formal **Drizzle migration** artifacts beyond runtime **`INIT_SQL`** in [`src/db/init-sql.ts`](../src/db/init-sql.ts).
-- **Keyboard** shortcuts for like / skip (accessibility / power users).
+- **`.tsx`** ingestion when JSX noise is acceptable to handle.
+- **Display name** from **`POST /api/users`** shown in the UI.
+- Formal **Drizzle migration** artifacts beyond runtime **`INIT_SQL`** ([`src/db/init-sql.ts`](../src/db/init-sql.ts)).
+- **Keyboard** shortcuts for like / skip.
 
 ## Platform / ops (not product features)
 
-Production **Dockerfile**, **`compose.prod.yml`**, **CI** image push, **scan job** pattern, backups — tracked in **[`PRODUCTION.md`](PRODUCTION.md)**. Do not mix that checklist with user-facing **FEATURES** above; link both from **[`README.md`](../README.md)** when documenting releases.
-
-## Shipped UX (swipe card)
-
-- **`user-select: none`** on the draggable card so pointer-drag does not highlight text (copy is intentional via control only).
-- **Copy** — duplicate-sheet **icon** on the title row (before memo) copies **`snippet_text`** ([`app/swipe-client.tsx`](../app/swipe-client.tsx) — `CopySnippetButton`, Clipboard API + `execCommand` fallback).
-- **Personal memo** — **memo icon** to the right of **Copy**, popover **textarea** with **`n/600`**, **Save** → **`PUT /api/cards/memo`**; memo popover and controls excluded from swipe pointer capture.
+Production **Dockerfile**, **`compose.prod.yml`**, **CI** image push, **scan job** pattern, backups — **[`PRODUCTION.md`](PRODUCTION.md)**. Keep that separate from user-facing items above.
 
 ## See also
 
-- [`docs/SPEC.md`](../docs/SPEC.md) — product goals and mechanics  
-- [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md) — constraints (especially social, ratings, attribution)  
-- [`INITIAL.md`](INITIAL.md) — v1 scope and **implementation status**  
+- [`docs/SPEC.md`](../docs/SPEC.md) — product goals and mechanics (high level)  
+- [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md) — constraints (social, ratings, attribution)  
+- [`v1-plan.md`](v1-plan.md) — execution checklist and implementation status  
 - [`PRODUCTION.md`](PRODUCTION.md) — production Compose rollout  
 - [`docs/TECHNICAL.md`](../docs/TECHNICAL.md) — stack, DB, ingestion  
 - [`docs/AGENTS.md`](../docs/AGENTS.md) — read order for implementers  

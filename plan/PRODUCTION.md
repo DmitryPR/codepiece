@@ -1,6 +1,6 @@
 # CodePiece — production rollout plan (Docker Compose)
 
-How to take the app from **local / hackathon dev** to a **repeatable Compose-based deployment**. This doc is the target checklist for production hardening; the **[`INITIAL.md`](INITIAL.md)** plan stays focused on feature implementation.
+How to take the app from **local / hackathon dev** to a **repeatable Compose-based deployment**. This doc is the target checklist for production hardening; **[`v1-plan.md`](v1-plan.md)** stays focused on feature implementation for this repository.
 
 **Product and stack context:** [`docs/SPEC.md`](../docs/SPEC.md), [`docs/TECHNICAL.md`](../docs/TECHNICAL.md), [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md).
 
@@ -16,7 +16,7 @@ How to take the app from **local / hackathon dev** to a **repeatable Compose-bas
 | **Image** | Immutable image built in CI: **`bun run build`** (Next.js), then a **slim Node** (or Bun) runtime serving **`next start`** or **standalone** output; **Linux**-native **`better-sqlite3`** built in the image. |
 | **Compose** | **`docker compose -f compose.prod.yml up -d`** (or similar): **`web`** only or **`web` + reverse proxy**; **no** bind-mounted source in prod. |
 | **Storage** | **Named volume** (or host path) for **`/data`** holding **`codepiece.db`** (+ WAL/SHM); backups and restore documented. |
-| **Config** | **`CODEPIECE_DB`**, **`PORT`**, **`NODE_ENV=production`** via **env file** or orchestrator secrets; no OAuth secrets in v1. |
+| **Config** | **`CODEPIECE_DB`**, **`PORT`**, **`NODE_ENV=production`** via **env file** or orchestrator secrets; no OAuth provider secrets required (anonymous sessions only). |
 | **Ingestion** | **Job** pattern: scheduled or manual **`bun run scan`** (or dedicated image) with **`TARGET_REPO`** mounted read-only and **shared `CODEPIECE_DB` volume** with **`web`**, or run scan before deploy and ship a seeded volume (trade-off: freshness vs simplicity). |
 | **Rollout** | **Build → tag → push registry → pull on host → `up -d` → smoke** (`curl` **`/`** or **`HEAD /`**); document rollback (previous image tag + same volume). |
 
@@ -37,6 +37,6 @@ How to take the app from **local / hackathon dev** to a **repeatable Compose-bas
 
 ## See also
 
-- **[`INITIAL.md`](INITIAL.md)** — v1 feature checklist (implementation).  
+- **[`v1-plan.md`](v1-plan.md)** — feature checklist (implementation).  
 - **[`README.md`](../README.md)** — local dev, **`docker compose`** (dev file), **`bun run seed:samples`**.  
 - **[`docs/TECHNICAL.md`](../docs/TECHNICAL.md)** — **`CODEPIECE_DB`**, Bun vs Node SQLite drivers.

@@ -1,11 +1,11 @@
 # CodePiece — technical notes
 
-Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This describes how we intend to implement the first version without over-scoping the hackathon.
+Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This describes how the **shipped app** in this repository is implemented without over-scoping the hackathon.
 
 ## Simplicity: auth and scanning
 
-- **No OAuth** — no Google, GitHub, or other social login for v1. Use an **anonymous session** (cookie + server-side `user` row) or a single local “player” record. Optional **display name** is fine; do not verify identities.
-- **Scanning is local** — the scanner runs **on the same machine** where you work, against a **filesystem path** to a cloned repo (e.g. `TARGET_REPO=/path/to/clone`). There is no hosted crawler or remote ingestion service in v1.
+- **No OAuth** — no Google, GitHub, or other social login in this app. Use an **anonymous session** (cookie + server-side `user` row) or a single local “player” record. Optional **display name** is fine; do not verify identities.
+- **Scanning is local** — the scanner runs **on the same machine** where you work, against a **filesystem path** to a cloned repo (e.g. `TARGET_REPO=/path/to/clone`). There is no hosted crawler or remote ingestion service in the current design.
 
 ## Sample projects for testing
 
@@ -19,7 +19,7 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## UI
 
-- Use a **small Next.js** surface: one or a few pages, card stack + swipe, minimal styling. No requirement for a large component library in v1.
+- Use a **small Next.js** surface: one or a few pages, card stack + swipe, minimal styling. No requirement for a large component library for the current UI.
 - The UI talks to a **simple backend API** (same repo or adjacent package) rather than embedding heavy business logic in client-only code.
 
 ## Data storage
@@ -45,12 +45,12 @@ CLI: **`bun run scan -- --force`** (after **`TARGET_REPO=...`**) reprocesses all
 
 - Use one **simple SQLite database** (file-backed) for:
   - **Cards** — one row per showable snippet; **inserted/updated only by the Bun scanner**. Next.js **reads** them for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
-  - **Users** — minimal profile only (e.g. id + optional display label); **created by Next.js** on first visit / lazy signup. **No OAuth**; no verified GitHub link required for v1.
+  - **Users** — minimal profile only (e.g. id + optional display label); **created by Next.js** on first visit / lazy signup. **No OAuth**; no verified GitHub link in this design.
   - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful; **inserted by Next.js** when the user swipes (e.g. `POST /api/swipes`), not by the Bun scanner.
   - **Snippet memos** — optional **plain-text** note per **(user, card)**; **Next.js** only (`PUT /api/cards/memo`, upsert or clear when empty).
   - **Seen cards** — enough to avoid showing the same snippet again (or to power recommendations later).
 - Keep a **small schema** — not a distributed data platform.
-- Scanner and Next.js must share the **same database** (v1: the same **`CODEPIECE_DB`** file) so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.
+- Scanner and Next.js must share the **same database** (the same **`CODEPIECE_DB`** file) so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.
 
 ## Docker
 
@@ -67,7 +67,7 @@ CLI: **`bun run scan -- --force`** (after **`TARGET_REPO=...`**) reprocesses all
 
 ## Languages
 
-- **v1: TypeScript only** (`.ts` / `.tsx` with sensible handling of JSX noise — e.g. focus on `.ts` first if parsing `.tsx` is noisy).
+- **TypeScript only** in the shipped ingestion pipeline (`.ts` / `.tsx` with sensible handling of JSX noise — e.g. focus on `.ts` first if parsing `.tsx` is noisy).
 - **Later**: add parsers or tree-sitter grammars for more languages using the same card pipeline and DB shape.
 
 ## Bun scan CLI: memory + card index
@@ -77,13 +77,13 @@ Running **`bun run scan`** (local Bun) should do **both** of the following in on
 1. **Scan memory** — update the **JSON memory file** with **processed** vs **skipped** files/symbols (path, reason: too large, generated, parse error, etc.) and **deterministic keys** (repo id + file path + content hash or commit SHA) so reruns are idempotent.
 2. **Card index** — **insert or upsert** rows in the **`Card`** table. That is the authoritative **index of snippets to show**; until the scan has run (or after a fresh DB), the feed may be empty.
 
-The Next.js app **reads** **Card** rows for the feed; it **never** inserts or updates **Card** rows and never parses repos for ingestion. **Card** rows come only from this Bun CLI (for v1). **Ratings** are **written** by Next.js when users swipe.
+The Next.js app **reads** **Card** rows for the feed; it **never** inserts or updates **Card** rows and never parses repos for ingestion. **Card** rows come only from this Bun CLI in the current architecture. **Ratings** are **written** by Next.js when users swipe.
 
 ## Scan memory (idempotent ingestion)
 
-- The memory artifact is a **JSON file** (v1: **`SCAN_MEMORY_PATH`**) recording what was already scanned and what was skipped. It works together with content hashing so unchanged files are not fully re-mined on every run.
+- The memory artifact is a **JSON file** (default **`SCAN_MEMORY_PATH`**) recording what was already scanned and what was skipped. It works together with content hashing so unchanged files are not fully re-mined on every run.
 
-## What we are not building in v1
+## Out of scope in this repository
 
 - No OAuth or third-party identity providers.
 - No remote / SaaS scanning pipeline — only local path-based scans.
@@ -94,9 +94,10 @@ The Next.js app **reads** **Card** rows for the feed; it **never** inserts or up
 ## See also
 
 - **[`COMMANDS.md`](COMMANDS.md)** — **`bun run …`** scripts and typical flows (quick reference).  
-- **[`SPEC.md`](SPEC.md)** — product behavior and goals.  
+- **[`SPEC.md`](SPEC.md)** — product behavior and goals (high level).  
+- **[`../plan/FEATURES.md`](../plan/FEATURES.md)** — what this repo implements vs the spec, partial areas, backlog.  
 - **[`GUARDRAILS.md`](GUARDRAILS.md)** — license, privacy, and UX constraints that affect implementation choices.  
 - **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** — ports, Docker, scan, UI.  
-- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — v1 feature implementation plan.  
+- **[`../plan/v1-plan.md`](../plan/v1-plan.md)** — execution checklist and plan.  
 - **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)** — Docker Compose production rollout.  
 - **[`AGENTS.md`](AGENTS.md)** — read order and scope rules for LLM / automated implementers.
