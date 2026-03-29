@@ -1,4 +1,6 @@
-# codepiece-hackathon
+<p align="center">
+  <img src="public/brand/codepiece-logo.png" alt="CodePiece" width="280" />
+</p>
 
 Hackathon workspace for **CodePiece** — swipe through real TypeScript snippets, like or skip, and optionally take private notes. Visual direction: **[`docs/STYLE.md`](docs/STYLE.md)**.
 
