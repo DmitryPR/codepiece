@@ -11,7 +11,7 @@ Install Bun using the official **[Installation](https://bun.com/docs/installatio
 | `bun install` | Install dependencies (run once after clone). **Use Bun only** — not npm/yarn/pnpm (see [`TECHNICAL.md`](TECHNICAL.md)). |
 | `bun test` | Full suite: scanner unit tests, DB integration, Next API route tests. |
 | `bun run test:scan` | `src/scan` + `src/lib` (scanner + `card-id` unit tests). |
-| `bun run test:web` | Only `tests/web/**/*.test.ts`. |
+| `bun run test:web` | Only `tests/web/**/*.{test.ts,test.tsx}`. |
 | `bun run scan` | CLI smoke (requires `TARGET_REPO` and writable `CODEPIECE_DB` / default `data/`). |
 | `bun run seed:samples` | Loads **`samples/mini-algorithms`** into **`data/codepiece.db`** with **`--force`** (handy after an empty DB + existing scan memory). |
 | `bun run db:stats` | Read-only SQLite summary (**`CODEPIECE_DB`**): counts, swipes by action, per-user swipes, cards by **`repo_label`**, file sizes. |
@@ -64,9 +64,17 @@ Or: `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force` if you need 
 
 These tests **do not** start the HTTP server; they call `GET`/`POST` exported functions with `Request` objects.
 
-## UI
+## UI / component tests (`tests/web/*.test.tsx`)
 
-The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it depends on. Optional follow-up: Playwright or component tests with `happy-dom` — not required for v1 in this repo.
+Uses **happy-dom** + **React Testing Library** (devDependencies). Import **`tests/web/happy-dom-globals`** first so `document`, `localStorage`, and related globals exist before rendering.
+
+| File | Covers |
+|------|--------|
+| `theme-defaults.test.ts` | **`CP_THEME_DEFAULT`** (`classic`) and **`CP_THEME_STORAGE_KEY`** (no DOM). |
+| `ui-theme-picker.test.tsx` | **Theme** `<select>` option order (Original first), default value, `data-cp-theme` + **`localStorage`** on change. |
+| `ui-dashboard-context.test.tsx` | **`DashboardStatsProvider`**: mocked **`fetch`** to `/api/dashboard/stats`, stats surface in UI; **`refreshDashboard(cardId)`** highlight clears after timeout. |
+
+End-to-end browser tests (e.g. Playwright) are still optional for this repo.
 
 ## Manual smoke (after scan + dev)
 
