@@ -1,7 +1,8 @@
-import { and, eq, sql, notInArray } from 'drizzle-orm';
+import { and, asc, eq, sql, notInArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { Db } from '../db/client';
 import * as schema from '../db/schema';
+import { getUserFocusRepoLabel } from './queue';
 import { cards, snippetMemos, swipes, users } from '../db/schema';
 
 /** Drizzle Bun + better-sqlite3 share the same call shape at runtime; union `Db` breaks `.select({...})` inference. */
@@ -26,7 +27,27 @@ export function cardExists(db: Db, cardId: string): boolean {
   );
 }
 
+/** Next unswiped card in this repo (stable order). */
+function pickNextUnswipedInRepo(db: Db, userId: string, repoLabel: string) {
+  const d = q(db);
+  const swipedIds = d.select({ id: swipes.cardId }).from(swipes).where(eq(swipes.userId, userId));
+  return (
+    d
+      .select()
+      .from(cards)
+      .where(and(eq(cards.repoLabel, repoLabel), notInArray(cards.id, swipedIds)))
+      .orderBy(asc(cards.sourcePath), asc(cards.symbolName), asc(cards.id))
+      .limit(1)
+      .get() ?? null
+  );
+}
+
 export function pickNextCard(db: Db, userId: string) {
+  const focus = getUserFocusRepoLabel(db, userId);
+  if (focus) {
+    const inRepo = pickNextUnswipedInRepo(db, userId, focus);
+    if (inRepo) return inRepo;
+  }
   const d = q(db);
   const swipedIds = d.select({ id: swipes.cardId }).from(swipes).where(eq(swipes.userId, userId));
   return (

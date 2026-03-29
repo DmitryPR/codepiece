@@ -81,7 +81,7 @@ bun run seed:samples
 or:
 
 ```bash
-TARGET_REPO=./samples/mini-algorithms bun run scan -- --force
+REPO_LABEL=TheAlgorithms/TypeScript TARGET_REPO=./samples/the-algorithms-typescript bun run scan -- --force
 ```
 
 See **`SCAN_FORCE`** in **[TECHNICAL.md](TECHNICAL.md)** (environment variables).

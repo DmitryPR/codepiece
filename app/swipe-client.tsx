@@ -403,7 +403,6 @@ export function SwipeClient() {
   const [dragging, setDragging] = useState(false);
   const [memoDraft, setMemoDraft] = useState('');
   const [memoPopoverOpen, setMemoPopoverOpen] = useState(false);
-  const [memoSaved, setMemoSaved] = useState(false);
   const [memoSaving, setMemoSaving] = useState(false);
   const startXRef = useRef(0);
   const dragActiveRef = useRef(false);
@@ -516,7 +515,6 @@ export function SwipeClient() {
       setMemoDraft('');
     }
     setMemoPopoverOpen(false);
-    setMemoSaved(false);
   }, [card?.id]);
 
   const saveMemo = async () => {
@@ -541,8 +539,7 @@ export function SwipeClient() {
       }
       setMemoDraft(norm.body);
       setCard((c) => (c ? { ...c, memo: norm.body === '' ? null : norm.body } : c));
-      setMemoSaved(true);
-      window.setTimeout(() => setMemoSaved(false), 2000);
+      setMemoPopoverOpen(false);
     } finally {
       setMemoSaving(false);
     }
@@ -777,11 +774,6 @@ export function SwipeClient() {
                 {countCodePoints(memoDraft)} / {MEMO_MAX_CODE_POINTS}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {memoSaved ? (
-                  <span style={{ fontSize: 12, color: 'var(--cp-success)' }} aria-live="polite">
-                    Saved
-                  </span>
-                ) : null}
                 <button
                   type="button"
                   disabled={memoSaving}

@@ -13,7 +13,8 @@ Install Bun using the official **[Installation](https://bun.com/docs/installatio
 | `bun run test:scan` | `src/scan` + `src/lib` (scanner + `card-id` unit tests). |
 | `bun run test:web` | Only `tests/web/**/*.test.ts`. |
 | `bun run scan` | CLI smoke (requires `TARGET_REPO` and writable `CODEPIECE_DB` / default `data/`). |
-| `bun run seed:samples` | Loads **`samples/mini-algorithms`** into **`data/codepiece.db`** with **`--force`** (handy after an empty DB + existing scan memory). |
+| `bun run db:clear` | Deletes default **`data/codepiece.db`** (+ WAL/SHM) and **`data/scan-memory.json`** if present — use before a clean re-seed. |
+| `bun run seed:samples` | Scans **`samples/the-algorithms-typescript`** ( **[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** snapshot) into **`data/codepiece.db`** with **`--force`** and **`REPO_LABEL=TheAlgorithms/TypeScript`**. |
 | `bun run db:stats` | Read-only SQLite summary (**`CODEPIECE_DB`**): counts, swipes by action, per-user swipes, cards by **`repo_label`**, file sizes. |
 
 For **complete** local verification before a PR:
@@ -32,7 +33,7 @@ bun run build
 bun run seed:samples
 ```
 
-Or: `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force` if you need **`--force`** explicitly.
+Or: `REPO_LABEL=TheAlgorithms/TypeScript TARGET_REPO=./samples/the-algorithms-typescript bun run scan -- --force` if you need **`--force`** explicitly.
 
 ## Environment used in tests
 
@@ -60,7 +61,7 @@ Or: `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force` if you need 
 
 | File | Covers |
 |------|--------|
-| `api-routes.test.ts` | **Route handlers** imported directly: seed `:memory:` DB + `GET /api/cards/next` (cookie session, **`memo`** field) + `PUT /api/cards/memo` (set/clear) + `POST /api/swipes` persistence + empty deck after swipe + 400 on bad action; `GET /api/dashboard/stats` (session-scoped likes/skips/memos + global card count). |
+| `api-routes.test.ts` | **Route handlers** imported directly: seed `:memory:` DB + `GET /api/cards/next` (cookie session, **`memo`**, **focus-repo order** vs global random fallback) + `PUT /api/cards/memo` (set/clear) + `POST /api/swipes` + `GET`/`PUT /api/queue` (**`repoLabel`**) + `GET /api/cards/browse` + `GET /api/dashboard/stats` (session-scoped aggregates). |
 
 These tests **do not** start the HTTP server; they call `GET`/`POST` exported functions with `Request` objects.
 
@@ -70,14 +71,14 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 
 ## Manual smoke (after scan + dev)
 
-1. `bun run seed:samples` (or `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force`)
+1. `bun run db:clear` (optional) then `bun run seed:samples` (or the equivalent **`TARGET_REPO`** / **`REPO_LABEL`** `scan -- --force` from [`samples/README.md`](../samples/README.md))
 2. `bun run dev` (port **4000**, Turbopack). **`EADDRINUSE`** or stale dev cache: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
-3. Open **[http://localhost:4000](http://localhost:4000)** — a card should appear; Like/Skip should succeed in the network tab.
+3. Open **[http://localhost:4000](http://localhost:4000)** — **Home** loads; open **Swipe** (header or **Start swiping**). With cards in the DB, a card should appear; Like/Skip should succeed in the network tab.
 
 ## Docker (optional manual check)
 
 1. `docker compose up` (see **[README.md](../README.md)**).
-2. On the **host**, with the same DB path the container uses: `TARGET_REPO=./samples/mini-algorithms CODEPIECE_DB=data/codepiece.db bun run scan`
+2. On the **host**, with the same DB path the container uses: `REPO_LABEL=TheAlgorithms/TypeScript TARGET_REPO=./samples/the-algorithms-typescript CODEPIECE_DB=data/codepiece.db bun run scan`
 3. Reload the app in the browser. Hot reload / restarts: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
 
 ## See also

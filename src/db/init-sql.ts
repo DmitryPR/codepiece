@@ -3,7 +3,8 @@ export const INIT_SQL = `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY NOT NULL,
   display_name TEXT,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  focus_repo_label TEXT
 );
 CREATE TABLE IF NOT EXISTS cards (
   id TEXT PRIMARY KEY NOT NULL,
@@ -34,4 +35,12 @@ CREATE TABLE IF NOT EXISTS snippet_memos (
   PRIMARY KEY (user_id, card_id)
 );
 CREATE INDEX IF NOT EXISTS idx_snippet_memos_user ON snippet_memos (user_id);
+CREATE TABLE IF NOT EXISTS user_card_queue (
+  user_id TEXT NOT NULL,
+  card_id TEXT NOT NULL,
+  position INTEGER NOT NULL,
+  added_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, card_id)
+);
+CREATE INDEX IF NOT EXISTS idx_user_card_queue_user_pos ON user_card_queue (user_id, position);
 `;

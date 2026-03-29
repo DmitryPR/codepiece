@@ -9,8 +9,8 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Sample projects for testing
 
-- **In-repo:** [`samples/mini-algorithms/`](../samples/mini-algorithms/) — a few short TypeScript modules with JSDoc, meant for **`TARGET_REPO=./samples/mini-algorithms`** (from the hackathon repo root). See [`samples/README.md`](../samples/README.md).
-- **External (recommended for scale):** clone **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)** (MIT, educational algorithms in TS/JS) and set **`TARGET_REPO`** to that directory. Large `src/` tree; still exclude `node_modules` / build output per ingestion rules.
+- **In-repo:** [`samples/the-algorithms-typescript/`](../samples/the-algorithms-typescript/) — vendored snapshot of **[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** (MIT); provenance in **[`CODEPIECE.md`](../samples/the-algorithms-typescript/CODEPIECE.md)**. **`bun run seed:samples`** uses **`TARGET_REPO=./samples/the-algorithms-typescript`** and **`REPO_LABEL=TheAlgorithms/TypeScript`**. See [`samples/README.md`](../samples/README.md).
+- **External:** clone any TS tree (e.g. **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)**) and set **`TARGET_REPO`**; still exclude `node_modules` / build output per ingestion rules.
 
 ## Runtime and local development
 
@@ -41,13 +41,14 @@ CLI: **`bun run scan -- --force`** (after **`TARGET_REPO=...`**) reprocesses all
 **Who writes what**
 
 - **`bun run scan`** (Bun) **writes** **Card** rows (and updates scan memory on disk) into the DB configured by **`CODEPIECE_DB`**. It does not record user ratings.
-- The **running Next.js** app (Route Handlers / server code) **reads** **Card** rows to build the feed (`/api/cards/next`, etc.) and **writes** **ratings / swipes** (and **User** rows) when someone likes or skips — each rating is **persisted in the same database**. It does **not** run the repo scanner or insert **Card** rows. It also **reads/writes** per-user **snippet memos** (optional private note per card, max **600** Unicode code points): table **`snippet_memos`**, **`PUT /api/cards/memo`**, and **`memo`** on **`GET /api/cards/next`** when a card is returned. **`GET /api/dashboard/stats`** (same session cookie as other routes) returns counts for **that user only** (likes, skips, memos, ranked list of cards **they** liked — grouped by swipe row count per card), plus **snippets in deck** (total **`cards`** in the DB). Symbol, repo label, path only — no developer identity; see [`src/lib/dashboard-stats.ts`](../src/lib/dashboard-stats.ts).
+- The **running Next.js** app (Route Handlers / server code) **reads** **Card** rows to build the feed (`/api/cards/next`, **`/api/cards/browse`**, etc.) and **writes** **ratings / swipes** (and **User** rows) when someone likes or skips — each rating is **persisted in the same database**. It does **not** run the repo scanner or insert **Card** rows. It also **reads/writes** per-user **snippet memos** (optional private note per card, max **600** Unicode code points): table **`snippet_memos`**, **`PUT /api/cards/memo`**, and **`memo`** on **`GET /api/cards/next`** when a card is returned. It **reads/writes** optional **`users.focus_repo_label`** (focus repository for the swipe feed) via **`GET`/`PUT /api/queue`** (see [`src/lib/queue.ts`](../src/lib/queue.ts)). **`GET /api/dashboard/stats`** (same session cookie as other routes) returns counts for **that user only** (likes, skips, memos, ranked list of cards **they** liked — grouped by swipe row count per card), plus **snippets in deck** (total **`cards`** in the DB). Symbol, repo label, path only — no developer identity; see [`src/lib/dashboard-stats.ts`](../src/lib/dashboard-stats.ts).
 
 - Use one **simple SQLite database** (file-backed) for:
   - **Cards** — one row per showable snippet; **inserted/updated only by the Bun scanner**. Next.js **reads** them for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
   - **Users** — minimal profile only (e.g. id + optional display label); **created by Next.js** on first visit / lazy signup. **No OAuth**; no verified GitHub link in this design.
   - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful; **inserted by Next.js** when the user swipes (e.g. `POST /api/swipes`), not by the Bun scanner.
   - **Snippet memos** — optional **plain-text** note per **(user, card)**; **Next.js** only (`PUT /api/cards/memo`, upsert or clear when empty).
+  - **Focus repo** — optional **`repo_label`** on the **user** row (**`users.focus_repo_label`**); **Next.js** only; **`GET`/`PUT /api/queue`**; when set, **`GET /api/cards/next`** prefers unswiped cards in that repo, then falls back to the global unswiped deck (see [`plan/FEATURES.md`](../plan/FEATURES.md)). Legacy **`user_card_queue`** is cleared when saving focus and is unused by the feed.
   - **Seen cards** — enough to avoid showing the same snippet again (or to power recommendations later).
 - Keep a **small schema** — not a distributed data platform.
 - Scanner and Next.js must share the **same database** (the same **`CODEPIECE_DB`** file) so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.

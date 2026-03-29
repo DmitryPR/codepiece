@@ -10,7 +10,8 @@ Run from the **repository root** with **[Bun](https://bun.com)**. Install: **`bu
 | `bun run build` | Production build → `.next/` (typecheck + Next lint). |
 | `bun run start` | Serve production build on **4000** only. |
 | `bun run scan` | Scan **`TARGET_REPO`**; writes **cards** + scan memory. Set **`TARGET_REPO`** (path to a repo or tree). |
-| `bun run seed:samples` | Scan **`samples/mini-algorithms`** with **`--force`** into the DB (quick local data). |
+| `bun run db:clear` | Remove default **`data/codepiece.db`** (+ WAL/SHM) and **`data/scan-memory.json`** (clean slate). |
+| `bun run seed:samples` | Scan **`samples/the-algorithms-typescript`** (**[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** snapshot) with **`REPO_LABEL=TheAlgorithms/TypeScript`** and **`--force`**. |
 | `bun run db:stats` | Read-only SQLite report (users, cards, swipes, **`snippet_memos`**, breakdowns, file sizes). Respects **`CODEPIECE_DB`**. |
 | `bun run db:push` | **Drizzle Kit** — push **`src/db/schema.ts`** to the SQLite file (**`CODEPIECE_DB`**). Use when the schema changes; normal dev creates tables via **`INIT_SQL`** on first open. |
 | `bun test` | Full test suite. |

@@ -51,6 +51,11 @@ function openBun(path: string): Cached {
     sqlite.exec('PRAGMA journal_mode = WAL;');
     const runMigrations = () => {
       sqlite.exec(INIT_SQL);
+      try {
+        sqlite.exec('ALTER TABLE users ADD COLUMN focus_repo_label TEXT');
+      } catch {
+        /* column already present */
+      }
     };
     runMigrations();
     const db = drizzle(sqlite, { schema }) as Db;
@@ -80,6 +85,11 @@ function openBetter(path: string): Cached {
     sqlite.pragma('journal_mode = WAL');
     const runMigrations = () => {
       sqlite.exec(INIT_SQL);
+      try {
+        sqlite.exec('ALTER TABLE users ADD COLUMN focus_repo_label TEXT');
+      } catch {
+        /* column already present */
+      }
     };
     runMigrations();
     const db = drizzle(sqlite, { schema }) as Db;

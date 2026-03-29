@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { DashboardStatsProvider, useDashboardStats } from './dashboard-context';
-import { SwipeClient } from './swipe-client';
 import { ThemePicker } from './theme-picker';
 
 function truncatePath(s: string, max = 36): string {
@@ -189,8 +190,25 @@ function DashboardPanel({
   );
 }
 
+const titleLinkStyle: CSSProperties = {
+  color: 'inherit',
+  textDecoration: 'none',
+};
+
+const navLinkStyle: CSSProperties = {
+  fontSize: 14,
+  fontWeight: 600,
+  color: 'var(--cp-accent)',
+  textDecoration: 'none',
+  padding: '8px 12px',
+  borderRadius: 8,
+  border: '1px solid var(--cp-border)',
+};
+
 function AppChrome({ children }: { children: ReactNode }) {
   const [panelOpen, setPanelOpen] = useState(false);
+  const pathname = usePathname();
+  const isSwipe = pathname === '/swipe';
 
   return (
     <>
@@ -209,9 +227,13 @@ function AppChrome({ children }: { children: ReactNode }) {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>CodePiece</h1>
+          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
+            <Link href="/" style={titleLinkStyle}>
+              CodePiece
+            </Link>
+          </h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.75 }}>
-            Swipe right to like, left to skip.
+            {isSwipe ? 'Swipe right to like, left to skip.' : 'Pick a repo on Home, then open Swipe.'}
           </p>
         </div>
         <div
@@ -224,6 +246,11 @@ function AppChrome({ children }: { children: ReactNode }) {
             justifyContent: 'flex-end',
           }}
         >
+          {!isSwipe ? (
+            <Link href="/swipe" style={navLinkStyle}>
+              Swipe
+            </Link>
+          ) : null}
           <ThemePicker />
           <button
             type="button"
@@ -255,14 +282,10 @@ function AppChrome({ children }: { children: ReactNode }) {
   );
 }
 
-export function AppShell() {
+export function AppShellLayout({ children }: { children: ReactNode }) {
   return (
     <DashboardStatsProvider>
-      <AppChrome>
-        <main style={{ maxWidth: 640, margin: '0 auto', padding: 24 }}>
-          <SwipeClient />
-        </main>
-      </AppChrome>
+      <AppChrome>{children}</AppChrome>
     </DashboardStatsProvider>
   );
 }

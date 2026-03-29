@@ -63,7 +63,7 @@ If **`SPEC.md`** and **`plan/v1-plan.md`** disagree on features, **follow the pl
 ### [`plan/v1-plan.md`](../plan/v1-plan.md) — **strong**
 
 - Ordered checklist, tables, API list, mermaid diagram, explicit in/out of scope.
-- Env vars are summarized in **[`TECHNICAL.md`](TECHNICAL.md)**. **`TARGET_REPO`** quick default: [`samples/mini-algorithms/`](../samples/mini-algorithms/) (see [`samples/README.md`](../samples/README.md)).
+- Env vars are summarized in **[`TECHNICAL.md`](TECHNICAL.md)**. **`TARGET_REPO`** quick default for **`seed:samples`**: [`samples/the-algorithms-typescript/`](../samples/the-algorithms-typescript/) (see [`samples/README.md`](../samples/README.md)).
 
 ### [`plan/FEATURES.md`](../plan/FEATURES.md) — **implementation map + backlog**
 

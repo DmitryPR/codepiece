@@ -50,6 +50,7 @@ Implement with one ORM/query layer (**Drizzle** here). **Bun scanner and Next.js
 | **Card** | Stable `id`; `source_path`; `symbol_name`; `snippet_text`; `line_start` / `line_end`; `context_summary` (JSDoc first line or machine-labeled heuristic); **provenance** per GUARDRAILS: `repo_url` or `repo_label`, `license` (string / SPDX when known), optional `commit_sha` |
 | **Swipe** | `user_id`, `card_id`, `action` (`like` \| `skip`), `created_at` |
 | **Snippet memo** | `user_id`, `card_id`, `body` (plain text, max **600** code points) — **shipped**; optional per **(user, card)** |
+| **Focus repository** | **`users.focus_repo_label`** (nullable); **`GET`/`PUT /api/queue`** with **`repoLabel`**. When set, **`pickNextCard`** serves unswiped cards in that repo (stable order); when the repo has no unswiped cards left, feed falls back to random unswiped cards globally ([`src/lib/queue.ts`](../src/lib/queue.ts)). Legacy **`user_card_queue`** is cleared on save and unused for the feed. |
 | **Seen / feed** | Derive “seen” from **swipes** only (`pickNextCard` excludes swiped `card_id`s). Optional `user_card_seen` for impressions without a swipe — backlog ([`docs/SPEC.md`](../docs/SPEC.md), [`FEATURES.md`](FEATURES.md)) |
 
 ## Ingestion pipeline (TypeScript, this plan)
@@ -67,16 +68,20 @@ Implement with one ORM/query layer (**Drizzle** here). **Bun scanner and Next.js
 | Method | Path | Purpose |
 |--------|------|--------|
 | `POST` | `/api/users` | Lazy-create anonymous user (cookie/session); optional display name only — **no OAuth** |
-| `GET` | `/api/cards/next` | Session cookie; returns next unseen **Card** (or empty); includes **`memo`** when present |
+| `GET` | `/api/cards/next` | Session cookie; returns next unseen **Card** (or empty); includes **`memo`** when present; honors **`users.focus_repo_label`** when set ([`src/lib/feed.ts`](../src/lib/feed.ts)) |
 | `POST` | `/api/swipes` | JSON: `cardId`, `action` (`like` \| `skip`); **persists** the rating/swipe row in the DB for the current user |
 | `PUT` | `/api/cards/memo` | JSON: `cardId`, `body` (optional plain text, max **600** Unicode code points); upsert or clear per **(user, card)** |
 | `GET` | `/api/dashboard/stats` | Session-scoped aggregates: your likes/skips/memos, **topByLikes** (your per-card like counts), global **cards** count |
+| `GET` | `/api/queue` | **`repos`** (distinct labels), **`repoLabel`** (current focus), **`progress`** (`total` / `reviewed` / **`pending`** in focus repo), **`pendingPreviews`** |
+| `PUT` | `/api/queue` | JSON body **`repoLabel`**: string or **`null`** (must match a **`cards.repo_label`** when a string) |
+| `GET` | `/api/cards/browse` | Paginated **`limit`/`offset`**, optional **`q`** search |
 
 Cookie or opaque session id for `userId` is enough. No third-party auth tokens. **Every swipe must be stored** so the feed and feedback loop stay consistent with [`docs/SPEC.md`](../docs/SPEC.md).
 
 ## UI work
 
-- Single **Next.js** page: monospace **code** block, **context** line, **attribution** footer (repo, license, path) per [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md).
+- **Routes:** **`/`** home — **focus repo** picker, progress + pending previews, stats snapshot, **Start swiping** → **`/swipe`**. **`/swipe`** — card stack (monospace **code**, **context**, **attribution** per [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)).
+- **Chrome:** **CodePiece** title links to **`/`**; **Swipe** nav on home; sticky header + **Stats** slide-over shared across routes ([`app/app-shell.tsx`](../app/app-shell.tsx)).
 - **Swipe**: pointer/touch gestures plus **left/right buttons** for accessibility.
 - On swipe success, fetch **next** card from the API.
 - **Stats:** header **Stats** control opens a panel with KPIs and **your** ranked liked snippets (same data as **`GET /api/dashboard/stats`**); after a **like**, the list refetches and the row for that card is **highlighted** (order may change).
@@ -91,13 +96,13 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/TECHNICAL.
 1. **Scaffold** the repo: `package.json`, `tsconfig`, flat `src/` (or minimal `apps/web` only if you split later — prefer flat if it stays simpler).
 2. **Database**: schema + migrations; **SQLite** file — single **`CODEPIECE_DB`** for scanner (Bun) and Next (Node).
 3. **Scanner CLI** (`bun run scan`): **scan memory** + **Card** upserts (Bun **writes** cards only).
-4. **Ingest**: run scanner locally against `TARGET_REPO` — start with **[`samples/mini-algorithms/`](../samples/mini-algorithms/)**, then optionally **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)** (see [`samples/README.md`](../samples/README.md)); confirm **Card** count increases and `/api/cards/next` returns data.
+4. **Ingest**: run scanner locally against `TARGET_REPO` — start with the bundled **[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** snapshot **[`samples/the-algorithms-typescript/`](../samples/the-algorithms-typescript/)** via **`bun run seed:samples`** (see [`samples/README.md`](../samples/README.md)); confirm **Card** count increases and `/api/cards/next` returns data.
 5. **API** routes: user lazy-create, next card, **`POST /api/swipes`** **persisting** ratings to the DB; verify with **curl** or a tiny test script.
-6. **Next.js** page: card display + swipe + API integration (swipe calls API so ratings are stored).
+6. **Next.js** pages: home + swipe routes, card display + swipe + API integration (swipe calls API so ratings are stored).
 
 ## Implementation status
 
-Items **1–6** are implemented: scaffold, **Drizzle** + **SQLite** on **`CODEPIECE_DB`** (**`bun:sqlite`** / **`better-sqlite3`**), scanner CLI (memory + card upserts), ingest against **`TARGET_REPO`**, API routes (**`/api/users`**, **`/api/cards/next`**, **`/api/swipes`**, **`/api/cards/memo`**, **`/api/dashboard/stats`**), Next.js swipe UI (**pointer drag** + **Skip/Like** buttons, **attribution** footer incl. optional **short commit SHA**, **heuristic** context called out per ingestion rules), **snippet memos**, and **session dashboard stats** (header panel + library sidebar). **`bun run seed:samples`** loads demo cards. **Package manager:** **Bun** only. **Automated checks:** `bun test` and `bun run build` (see [`docs/TEST-SPEC.md`](../docs/TEST-SPEC.md)).
+Items **1–6** are implemented: scaffold, **Drizzle** + **SQLite** on **`CODEPIECE_DB`** (**`bun:sqlite`** / **`better-sqlite3`**), scanner CLI (memory + card upserts), ingest against **`TARGET_REPO`**, API routes (**`/api/users`**, **`/api/cards/next`**, **`/api/swipes`**, **`/api/cards/memo`**, **`/api/dashboard/stats`**, **`/api/queue`**, **`/api/cards/browse`**), Next.js **home** (`/`) + **swipe** (`/swipe`) with shared chrome, optional **focus repo** on **`users.focus_repo_label`** + ordered unswiped feed in-repo then global random fallback, swipe UI (**pointer drag** + **Skip/Like** buttons, **attribution** footer incl. optional **short commit SHA**, **heuristic** context called out per ingestion rules), **snippet memos**, and **session dashboard stats** (header panel + library sidebar). **`bun run seed:samples`** loads the bundled **[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** snapshot (**`bun run db:clear`** wipes the default DB + scan memory first if you want a clean slate). **Package manager:** **Bun** only. **Automated checks:** `bun test` and `bun run build` (see [`docs/TEST-SPEC.md`](../docs/TEST-SPEC.md)).
 
 **Implementation map and backlog:** **[`FEATURES.md`](FEATURES.md)** — what this repository **implements** vs **[`docs/SPEC.md`](../docs/SPEC.md)**, **partial** areas, **deferred** work, and **optional polish** (`.tsx` ingestion, display name in UI, Drizzle migrations beyond **`INIT_SQL`**, keyboard shortcuts).
 

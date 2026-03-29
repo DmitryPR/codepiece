@@ -13,11 +13,12 @@ The feed reads **Card** rows created only by **`bun run scan`**. Until you scan 
 
 ```bash
 bun install
+bun run db:clear   # optional: wipe SQLite + scan memory under data/
 bun run seed:samples
 bun run dev
 ```
 
-Wait until the terminal shows **Ready**, then open **[http://localhost:4000](http://localhost:4000)**. This app uses **port 4000** only — **`http://localhost:3000`** will not respond unless you changed the scripts yourself. Optional env vars (**`CODEPIECE_DB`**, **`SCAN_MEMORY_PATH`**, **`REPO_LABEL`**) are listed in **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)**. If the feed stays empty after a scan, see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
+Wait until the terminal shows **Ready**, then open **[http://localhost:4000](http://localhost:4000)** (**Home**). Use **Start swiping** or **`/swipe`** for the deck. This app uses **port 4000** only — **`http://localhost:3000`** will not respond unless you changed the scripts yourself. Optional env vars (**`CODEPIECE_DB`**, **`SCAN_MEMORY_PATH`**, **`REPO_LABEL`**) are listed in **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)**. If the feed stays empty after a scan, see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
 
 ## Build and run
 
@@ -85,5 +86,5 @@ Use them together with **`docs/AGENTS.md`** (or root **`AGENTS.md`**). CodePiece
 
 ## Sample scan targets
 
-- **[`samples/`](samples/)** — bundled **`samples/mini-algorithms/`** (small `.ts` files) for local **`TARGET_REPO`** testing with **`bun run scan`**.  
-- For a large real corpus, clone **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)** and point **`TARGET_REPO`** at that path (see [`samples/README.md`](samples/README.md)).
+- **[`samples/the-algorithms-typescript/`](samples/the-algorithms-typescript/)** — vendored snapshot of **[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** (see **[`samples/the-algorithms-typescript/CODEPIECE.md`](samples/the-algorithms-typescript/CODEPIECE.md)**). **`bun run seed:samples`** scans it with **`REPO_LABEL=TheAlgorithms/TypeScript`**.  
+- For other corpora, clone locally and set **`TARGET_REPO`** (see [`samples/README.md`](samples/README.md)), e.g. **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)**.
