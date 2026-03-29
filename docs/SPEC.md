@@ -59,4 +59,5 @@ The working name in this spec is **CodePiece**. The repository identifier is **c
 
 ## See also
 
-- **[`GUARDRAILS.md`](GUARDRAILS.md)** — constraints and anti-patterns (what not to build or optimize for).
+- **[`GUARDRAILS.md`](GUARDRAILS.md)** — constraints and anti-patterns (what not to build or optimize for).  
+- **[`technical.md`](technical.md)** — implementation stack, database, ingestion, Docker.
