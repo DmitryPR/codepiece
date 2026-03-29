@@ -18,7 +18,15 @@ export async function POST(req: Request) {
   const action = body.action === 'like' || body.action === 'skip' ? body.action : null;
   if (!action) return NextResponse.json({ error: 'action must be like or skip' }, { status: 400 });
 
-  const db = getDb();
-  recordSwipe(db, randomUUID(), userId, body.cardId, action);
-  return NextResponse.json({ ok: true });
+  try {
+    const db = getDb();
+    recordSwipe(db, randomUUID(), userId, body.cardId, action);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[POST /api/swipes]', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'internal server error' },
+      { status: 500 },
+    );
+  }
 }

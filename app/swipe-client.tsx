@@ -7,6 +7,7 @@ import {
   countCodePoints,
   normalizeMemoInput,
 } from '@/src/lib/memo';
+import { useDashboardStats } from './dashboard-context';
 
 const HEURISTIC_PREFIX = '[heuristic] ';
 
@@ -32,6 +33,64 @@ function splitContextSummary(raw: string): { isHeuristic: boolean; text: string 
 }
 
 const SWIPE_THRESHOLD_PX = 72;
+
+/** Classic “two sheets” copy icon (same metaphor as OS / Material / Feather). */
+function CopyIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+/** Lined note — minimal stroke icon aligned with CopyIcon (editor-adjacent, not emoji). */
+function MemoIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="5" y="3" width="14" height="18" rx="2" ry="2" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </svg>
+  );
+}
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {
@@ -68,32 +127,36 @@ function CopySnippetButton({ snippetText }: { snippetText: string }) {
     <button
       type="button"
       onClick={onClick}
-      aria-label="Copy code snippet to clipboard"
+      title={copied ? 'Copied' : 'Copy snippet'}
+      aria-label={copied ? 'Copied to clipboard' : 'Copy code snippet to clipboard'}
       style={{
         flexShrink: 0,
-        fontSize: 11,
-        padding: '4px 10px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '4px 8px',
         borderRadius: 6,
-        border: '1px solid #536471',
-        background: copied ? '#1a3d2e' : 'transparent',
-        color: copied ? '#6ee7b7' : '#8b98a5',
+        border: '1px solid var(--cp-border)',
+        background: copied ? 'var(--cp-success-bg)' : 'transparent',
+        color: copied ? 'var(--cp-success)' : 'var(--cp-icon-muted)',
         cursor: 'pointer',
-        alignSelf: 'flex-start',
+        lineHeight: 0,
       }}
     >
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? <CheckIcon size={17} /> : <CopyIcon size={17} />}
     </button>
   );
 }
 
 export function SwipeClient() {
+  const dashboard = useDashboardStats();
   const [userReady, setUserReady] = useState(false);
   const [card, setCard] = useState<Card | null | undefined>(undefined);
   const [err, setErr] = useState<string | null>(null);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [memoDraft, setMemoDraft] = useState('');
-  const [memoOpen, setMemoOpen] = useState(false);
+  const [memoPopoverOpen, setMemoPopoverOpen] = useState(false);
   const [memoSaved, setMemoSaved] = useState(false);
   const [memoSaving, setMemoSaving] = useState(false);
   const startXRef = useRef(0);
@@ -203,11 +266,10 @@ export function SwipeClient() {
   useEffect(() => {
     if (card && card !== null) {
       setMemoDraft(card.memo ?? '');
-      setMemoOpen(Boolean(card.memo));
     } else {
       setMemoDraft('');
-      setMemoOpen(false);
     }
+    setMemoPopoverOpen(false);
     setMemoSaved(false);
   }, [card?.id]);
 
@@ -233,7 +295,6 @@ export function SwipeClient() {
       }
       setMemoDraft(norm.body);
       setCard((c) => (c ? { ...c, memo: norm.body === '' ? null : norm.body } : c));
-      if (norm.body !== '') setMemoOpen(true);
       setMemoSaved(true);
       window.setTimeout(() => setMemoSaved(false), 2000);
     } finally {
@@ -243,6 +304,7 @@ export function SwipeClient() {
 
   const swipe = async (action: 'like' | 'skip') => {
     if (!card) return;
+    const cardId = card.id;
     setDragX(0);
     setDragging(false);
     setErr(null);
@@ -250,17 +312,21 @@ export function SwipeClient() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ cardId: card.id, action }),
+      body: JSON.stringify({ cardId, action }),
     });
     if (!r.ok) {
       setErr(await r.text());
       return;
     }
     await loadNext();
+    if (dashboard) {
+      if (action === 'like') dashboard.refreshDashboard(cardId);
+      else dashboard.refreshDashboard();
+    }
   };
 
   if (err) {
-    return <p style={{ color: '#f87171' }}>{err}</p>;
+    return <p style={{ color: 'var(--cp-error)' }}>{err}</p>;
   }
 
   if (!userReady || card === undefined) {
@@ -271,20 +337,22 @@ export function SwipeClient() {
     return (
       <p style={{ opacity: 0.85 }}>
         No more cards. Load snippets with{' '}
-        <code style={{ background: '#2f3336', padding: '2px 6px', borderRadius: 4 }}>bun run seed:samples</code> or{' '}
-        <code style={{ background: '#2f3336', padding: '2px 6px', borderRadius: 4 }}>TARGET_REPO=… bun run scan</code> (see README).
+        <code style={{ background: 'var(--cp-border)', padding: '2px 6px', borderRadius: 4 }}>bun run seed:samples</code> or{' '}
+        <code style={{ background: 'var(--cp-border)', padding: '2px 6px', borderRadius: 4 }}>TARGET_REPO=… bun run scan</code> (see README).
       </p>
     );
   }
 
   const ctx = splitContextSummary(card.contextSummary);
+  const memoHasContent =
+    memoDraft.trim().length > 0 || Boolean(card.memo && card.memo.trim().length > 0);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
     if (e.button !== 0) return;
     // Do not capture when the gesture starts on controls: capture retargets pointerup to the
     // article and the button never receives a full click — Skip/Like would not fire.
     const t = e.target as HTMLElement | null;
-    if (t?.closest('button, a, input, textarea, select, summary, [role="button"]')) return;
+    if (t?.closest('button, a, input, textarea, select, summary, [role="button"], [role="dialog"]')) return;
 
     e.currentTarget.setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
@@ -327,37 +395,68 @@ export function SwipeClient() {
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
         style={{
-          background: '#16181c',
+          background: 'var(--cp-surface)',
           borderRadius: 12,
-          border: '1px solid #2f3336',
+          border: '1px solid var(--cp-border)',
           overflow: 'hidden',
           touchAction: 'none',
           userSelect: 'none',
           WebkitUserSelect: 'none',
           cursor: dragging ? 'grabbing' : 'grab',
           transform: `translateX(${dragX}px) rotate(${dragX * 0.04}deg)`,
-          transition: dragging ? 'none' : 'transform 0.2s ease-out',
           boxShadow:
             dragX > 20
-              ? `inset 0 0 0 2px rgba(29, 155, 240, ${hintOpacity * 0.6})`
+              ? `inset 0 0 0 2px color-mix(in srgb, var(--cp-accent) ${hintOpacity * 55}%, transparent)`
               : dragX < -20
-                ? `inset 0 0 0 2px rgba(248, 113, 113, ${hintOpacity * 0.5})`
+                ? `inset 0 0 0 2px color-mix(in srgb, var(--cp-swipe-skip) ${hintOpacity * 45}%, transparent)`
                 : undefined,
         }}
       >
-      <header style={{ padding: '12px 16px', borderBottom: '1px solid #2f3336' }}>
-        <strong>{card.symbolName}</strong>
+      <header
+        style={{
+          position: 'relative',
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--cp-border)',
+        }}
+      >
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
-            gap: 10,
-            marginTop: 8,
-            fontSize: 13,
-            opacity: 0.85,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
           }}
         >
-          <div style={{ flex: 1, minWidth: 0, opacity: 0.88 }}>
+          <strong style={{ flex: 1, minWidth: 0, fontSize: '1.05rem' }}>{card.symbolName}</strong>
+          <div style={{ display: 'flex', flexShrink: 0, alignItems: 'center', gap: 8 }}>
+            <CopySnippetButton snippetText={card.snippetText} />
+            <button
+              type="button"
+              aria-label={memoPopoverOpen ? 'Close personal memo' : 'Personal memo (private note)'}
+              aria-expanded={memoPopoverOpen}
+              onClick={() => setMemoPopoverOpen((o) => !o)}
+              title="Memo"
+              style={{
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px 8px',
+                borderRadius: 6,
+                border: '1px solid var(--cp-border)',
+                background:
+                  memoPopoverOpen || memoHasContent ? 'var(--cp-accent-subtle)' : 'transparent',
+                color: memoHasContent ? 'var(--cp-accent)' : 'var(--cp-icon-muted)',
+                cursor: 'pointer',
+                lineHeight: 0,
+              }}
+            >
+              <MemoIcon size={17} />
+            </button>
+          </div>
+        </div>
+        <div style={{ marginTop: 10, fontSize: 13, opacity: 0.85 }}>
+          <div style={{ opacity: 0.88 }}>
             {ctx.text}
             {ctx.isHeuristic ? (
               <span style={{ display: 'block', fontSize: 11, opacity: 0.55, marginTop: 4, fontStyle: 'italic' }}>
@@ -365,67 +464,50 @@ export function SwipeClient() {
               </span>
             ) : null}
           </div>
-          <CopySnippetButton snippetText={card.snippetText} />
         </div>
-      </header>
-      <pre
-        style={{
-          margin: 0,
-          padding: 16,
-          overflow: 'auto',
-          fontSize: 13,
-          lineHeight: 1.45,
-          maxHeight: 360,
-          background: '#0b0d0f',
-        }}
-      >
-        {card.snippetText}
-      </pre>
-      <div
-        style={{
-          padding: '10px 16px 12px',
-          borderTop: '1px solid #2f3336',
-          userSelect: 'text',
-          WebkitUserSelect: 'text',
-        }}
-      >
-        <details
-          key={card.id}
-          open={memoOpen}
-          onToggle={(e) => setMemoOpen(e.currentTarget.open)}
-          style={{ fontSize: 13 }}
-        >
-          <summary
+        {memoPopoverOpen ? (
+          <div
+            role="dialog"
+            aria-label="Personal memo"
             style={{
-              cursor: 'pointer',
-              opacity: 0.8,
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
+              position: 'absolute',
+              right: 12,
+              top: 'calc(100% - 2px)',
+              zIndex: 20,
+              width: 'min(calc(100vw - 48px), 300px)',
+              maxWidth: 'calc(100% - 24px)',
+              marginTop: 6,
+              padding: 12,
+              borderRadius: 10,
+              border: '1px solid var(--cp-border-input)',
+              background: 'var(--cp-bg-deep)',
+              boxShadow: '0 12px 40px var(--cp-shadow)',
+              userSelect: 'text',
+              WebkitUserSelect: 'text',
             }}
+            onPointerDown={(e) => e.stopPropagation()}
           >
-            Personal memo (optional, private)
-          </summary>
-          <div style={{ marginTop: 10 }}>
+            <p style={{ margin: '0 0 8px', fontSize: 12, opacity: 0.7 }}>Private note (only you)</p>
             <textarea
               value={memoDraft}
               onChange={(e) => setMemoDraft(clampToMaxCodePoints(e.target.value))}
-              rows={3}
+              rows={4}
               placeholder="Short note on this snippet…"
               aria-label="Personal memo for this snippet"
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
                 resize: 'vertical',
-                minHeight: 72,
+                minHeight: 88,
                 maxHeight: 200,
                 padding: 10,
                 fontSize: 13,
                 fontFamily: 'system-ui, sans-serif',
                 lineHeight: 1.4,
                 borderRadius: 8,
-                border: '1px solid #38444d',
-                background: '#0b0d0f',
-                color: '#e7e9ea',
+                border: '1px solid var(--cp-border-input)',
+                background: 'var(--cp-surface)',
+                color: 'var(--cp-text)',
               }}
             />
             <div
@@ -434,7 +516,7 @@ export function SwipeClient() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 12,
-                marginTop: 8,
+                marginTop: 10,
                 flexWrap: 'wrap',
               }}
             >
@@ -443,7 +525,7 @@ export function SwipeClient() {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {memoSaved ? (
-                  <span style={{ fontSize: 12, color: '#6ee7b7' }} aria-live="polite">
+                  <span style={{ fontSize: 12, color: 'var(--cp-success)' }} aria-live="polite">
                     Saved
                   </span>
                 ) : null}
@@ -454,36 +536,78 @@ export function SwipeClient() {
                   style={{
                     padding: '6px 14px',
                     borderRadius: 8,
-                    border: '1px solid #536471',
+                    border: '1px solid var(--cp-border)',
                     background: 'transparent',
-                    color: '#e7e9ea',
+                    color: 'var(--cp-text)',
                     cursor: memoSaving ? 'wait' : 'pointer',
                     opacity: memoSaving ? 0.6 : 1,
                   }}
                 >
-                  {memoSaving ? 'Saving…' : 'Save memo'}
+                  {memoSaving ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </div>
           </div>
-        </details>
-      </div>
-      <footer style={{ padding: 12, fontSize: 12, opacity: 0.7, borderTop: '1px solid #2f3336' }}>
+        ) : null}
+      </header>
+      <pre
+        style={{
+          margin: 0,
+          padding: 16,
+          overflow: 'auto',
+          fontSize: 13,
+          lineHeight: 1.45,
+          maxHeight: 360,
+          background: 'var(--cp-bg-deep)',
+        }}
+      >
+        {card.snippetText}
+      </pre>
+      <footer
+        style={{
+          padding: 12,
+          fontSize: 12,
+          opacity: 0.7,
+          borderTop: '1px solid var(--cp-border)',
+        }}
+      >
         {card.repoLabel} · {card.license} · {card.sourcePath} (lines {card.lineStart}–{card.lineEnd})
         {card.commitSha ? ` · ${card.commitSha.slice(0, 7)}` : ''}
       </footer>
-      <div style={{ display: 'flex', gap: 12, padding: 16, justifyContent: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 12,
+          padding: 16,
+          justifyContent: 'center',
+          borderTop: '1px solid var(--cp-border)',
+        }}
+      >
         <button
           type="button"
           onClick={() => swipe('skip')}
-          style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #536471', background: 'transparent', color: '#e7e9ea', cursor: 'pointer' }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 8,
+            border: '1px solid var(--cp-border)',
+            background: 'transparent',
+            color: 'var(--cp-text)',
+            cursor: 'pointer',
+          }}
         >
           Skip
         </button>
         <button
           type="button"
           onClick={() => swipe('like')}
-          style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#1d9bf0', color: '#fff', cursor: 'pointer' }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 8,
+            border: 'none',
+            background: 'var(--cp-accent)',
+            color: 'var(--cp-on-accent)',
+            cursor: 'pointer',
+          }}
         >
           Like
         </button>

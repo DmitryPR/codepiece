@@ -14,16 +14,24 @@ export async function POST(req: Request) {
     /* optional body */
   }
 
-  const id = randomUUID();
-  const db = getDb();
-  ensureUser(db, id, displayName);
+  try {
+    const id = randomUUID();
+    const db = getDb();
+    ensureUser(db, id, displayName);
 
-  const res = NextResponse.json({ id, displayName });
-  res.cookies.set(COOKIE, id, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365,
-  });
-  return res;
+    const res = NextResponse.json({ id, displayName });
+    res.cookies.set(COOKIE, id, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return res;
+  } catch (err) {
+    console.error('[POST /api/users]', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'internal server error' },
+      { status: 500 },
+    );
+  }
 }

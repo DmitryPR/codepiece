@@ -5,10 +5,10 @@ Run from the **repository root** with **[Bun](https://bun.com)**. Install: **`bu
 | Command | What it does |
 |--------|----------------|
 | `bun install` | Install dependencies (`bun.lock`). |
-| `bun run dev` | Next.js dev, port **4000**, Turbopack + hot reload. |
-| `bun run dev:webpack` | Dev on **4000** using Webpack instead of Turbopack. |
+| `bun run dev` | Next.js dev on **4000** only, Turbopack + hot reload. |
+| `bun run dev:webpack` | Dev on **4000** only, Webpack instead of Turbopack. |
 | `bun run build` | Production build → `.next/` (typecheck + Next lint). |
-| `bun run start` | Serve production build on **4000**. |
+| `bun run start` | Serve production build on **4000** only. |
 | `bun run scan` | Scan **`TARGET_REPO`**; writes **cards** + scan memory. Set **`TARGET_REPO`** (path to a repo or tree). |
 | `bun run seed:samples` | Scan **`samples/mini-algorithms`** with **`--force`** into the DB (quick local data). |
 | `bun run db:stats` | Read-only SQLite report (users, cards, swipes, **`snippet_memos`**, breakdowns, file sizes). Respects **`CODEPIECE_DB`**. |

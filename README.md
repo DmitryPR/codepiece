@@ -1,8 +1,6 @@
 # codepiece-hackathon
 
-![CodePiece — swipe UI with a code snippet card, Skip and Like](docs/codepiece-ui.png)
-
-Hackathon workspace for **CodePiece** — a swipe-based game for discovering and rating code snippets.
+Hackathon workspace for **CodePiece** — a swipe-based game for discovering and rating code snippets. Visual direction and palette: **[`docs/STYLE.md`](docs/STYLE.md)**.
 
 This repo uses **[Bun](https://bun.com)** as the **package manager** and runtime for scripts: **`bun install`**, **`bun test`**, **`bun run scan`**, and **`bun run`** for Next.js. Do not use npm, yarn, or pnpm for installs (they will not respect **`bun.lock`**).
 
@@ -29,7 +27,7 @@ From the **repo root**:
 bun install
 ```
 
-**Development** (default port **4000**, **Turbopack**, hot reload / Fast Refresh):
+**Development** (port **4000** only, **Turbopack**, hot reload / Fast Refresh):
 
 ```bash
 bun run dev
@@ -42,7 +40,7 @@ bun run build
 bun run start
 ```
 
-`bun run build` type-checks, lints (Next defaults), and writes **`.next/`**; **`bun run start`** serves that build. Stop the server with **Ctrl+C**.
+`bun run build` type-checks, lints (Next defaults), and writes **`.next/`**; **`bun run start`** serves that build on **port 4000**. Stop the server with **Ctrl+C**.
 
 Use the **same `CODEPIECE_DB`** for **`bun run scan`**, **`bun run dev`**, and **`bun run start`** (default **`data/codepiece.db`**). SQLite is opened via **Bun** or **Node** depending on the process — see **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)**.
 

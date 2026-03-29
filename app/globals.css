@@ -1,10 +1,81 @@
 * {
   box-sizing: border-box;
 }
+
+/* Default / Original — first-ship dark UI (also html[data-cp-theme='classic']) */
+:root,
+html[data-cp-theme='classic'] {
+  --cp-bg-deep: #0b0d0f;
+  --cp-body-bg: #0f1419;
+  --cp-surface: #16181c;
+  --cp-text: #e7e9ea;
+  --cp-muted: #8b98a5;
+  --cp-accent: #1d9bf0;
+
+  --cp-border: #2f3336;
+  --cp-border-input: #38444d;
+  --cp-icon-muted: #8b98a5;
+  --cp-accent-subtle: rgba(29, 155, 240, 0.12);
+  --cp-accent-tint: color-mix(in srgb, var(--cp-accent) 18%, var(--cp-bg-deep));
+  --cp-on-accent: #ffffff;
+  --cp-overlay: rgb(0 0 0 / 0.45);
+  --cp-shadow: rgb(0 0 0 / 0.4);
+  --cp-error: #f87171;
+  --cp-success: #6ee7b7;
+  --cp-success-bg: #1a3d2e;
+  --cp-swipe-skip: #f87171;
+}
+
+/* Monochrome Harmony — Monochrome Harmony.pdf */
+html[data-cp-theme='harmony'] {
+  --cp-bg-deep: #242423;
+  --cp-surface: #333533;
+  --cp-text: #e8eddf;
+  --cp-muted: #cfdbd5;
+  --cp-accent: #f5cb5c;
+
+  --cp-border: color-mix(in srgb, var(--cp-muted) 30%, var(--cp-surface));
+  --cp-border-input: color-mix(in srgb, var(--cp-muted) 42%, var(--cp-surface));
+  --cp-icon-muted: color-mix(in srgb, var(--cp-muted) 55%, var(--cp-bg-deep));
+  --cp-accent-subtle: color-mix(in srgb, var(--cp-accent) 14%, transparent);
+  --cp-accent-tint: color-mix(in srgb, var(--cp-accent) 22%, var(--cp-bg-deep));
+  --cp-on-accent: #242423;
+  --cp-overlay: rgb(36 36 35 / 0.52);
+  --cp-shadow: rgb(0 0 0 / 0.35);
+  --cp-error: var(--cp-accent);
+  --cp-success: var(--cp-accent);
+  --cp-success-bg: var(--cp-accent-tint);
+  --cp-swipe-skip: var(--cp-muted);
+  --cp-body-bg: var(--cp-bg-deep);
+}
+
+/* Black & Gold Elegance — Black & Gold Elegance.pdf */
+html[data-cp-theme='elegance'] {
+  --cp-bg-deep: #000000;
+  --cp-surface: #14213d;
+  --cp-text: #e5e5e5;
+  --cp-muted: #e5e5e5;
+  --cp-accent: #fca311;
+
+  --cp-border: color-mix(in srgb, var(--cp-muted) 22%, var(--cp-surface));
+  --cp-border-input: color-mix(in srgb, #ffffff 28%, var(--cp-surface));
+  --cp-icon-muted: color-mix(in srgb, var(--cp-muted) 48%, var(--cp-bg-deep));
+  --cp-accent-subtle: color-mix(in srgb, var(--cp-accent) 16%, transparent);
+  --cp-accent-tint: color-mix(in srgb, var(--cp-accent) 24%, var(--cp-bg-deep));
+  --cp-on-accent: #000000;
+  --cp-overlay: rgb(0 0 0 / 0.62);
+  --cp-shadow: rgb(0 0 0 / 0.55);
+  --cp-error: var(--cp-accent);
+  --cp-success: var(--cp-accent);
+  --cp-success-bg: var(--cp-accent-tint);
+  --cp-swipe-skip: var(--cp-muted);
+  --cp-body-bg: var(--cp-bg-deep);
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: #0f1419;
-  color: #e7e9ea;
+  background: var(--cp-body-bg, var(--cp-bg-deep));
+  color: var(--cp-text);
   min-height: 100vh;
 }

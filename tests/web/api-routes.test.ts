@@ -1,9 +1,10 @@
 import { describe, expect, test, beforeEach, afterEach } from 'bun:test';
 import { resetDbCache, getDb } from '../../src/db/client';
-import { cards } from '../../src/db/schema';
-import { ensureUser } from '../../src/lib/feed';
+import { cards, snippetMemos } from '../../src/db/schema';
+import { ensureUser, recordSwipe } from '../../src/lib/feed';
 import { stableCardId } from '../../src/lib/card-id';
 import { GET as GET_NEXT } from '../../app/api/cards/next/route';
+import { GET as GET_DASHBOARD_STATS } from '../../app/api/dashboard/stats/route';
 import { PUT as PUT_MEMO } from '../../app/api/cards/memo/route';
 import { POST as POST_SWIPE } from '../../app/api/swipes/route';
 
@@ -158,5 +159,64 @@ describe('Next.js API routes (integration)', () => {
       }),
     );
     expect(swipe.status).toBe(400);
+  });
+
+  test('GET /api/dashboard/stats 401 without user', async () => {
+    const res = await GET_DASHBOARD_STATS(new Request('http://localhost/api/dashboard/stats'));
+    expect(res.status).toBe(401);
+  });
+
+  test('GET /api/dashboard/stats aggregates swipes and memos', async () => {
+    const db = getDb();
+    const idA = stableCardId('lab', 'x.ts', 'fn');
+    const idB = stableCardId('lab', 'b.ts', 'bar');
+    db.insert(cards)
+      .values({
+        id: idB,
+        sourcePath: 'b.ts',
+        symbolName: 'bar',
+        snippetText: 'export const bar = 1',
+        lineStart: 1,
+        lineEnd: 1,
+        contextSummary: 'test',
+        repoLabel: 'lab',
+        license: 'MIT',
+        commitSha: null,
+      })
+      .run();
+
+    recordSwipe(db, 'sw-a1', 'user-1', idA, 'like');
+    recordSwipe(db, 'sw-b1', 'user-1', idB, 'like');
+    recordSwipe(db, 'sw-b2', 'user-1', idB, 'like');
+    recordSwipe(db, 'sw-b3', 'user-1', idB, 'like');
+    recordSwipe(db, 'sw-sk', 'user-1', idA, 'skip');
+
+    db.insert(snippetMemos)
+      .values({ userId: 'user-1', cardId: idA, body: 'note', updatedAt: Date.now() })
+      .run();
+
+    const res = await GET_DASHBOARD_STATS(
+      new Request('http://localhost/api/dashboard/stats', {
+        headers: { cookie: 'cp_uid=user-1' },
+      }),
+    );
+    expect(res.status).toBe(200);
+    const j = (await res.json()) as {
+      cardsTotal: number;
+      likesTotal: number;
+      skipsTotal: number;
+      cardsWithMemoCount: number;
+      topByLikes: { cardId: string; likeCount: number; symbolName: string }[];
+    };
+    expect(j.cardsTotal).toBe(2);
+    expect(j.likesTotal).toBe(4);
+    expect(j.skipsTotal).toBe(1);
+    expect(j.cardsWithMemoCount).toBe(1);
+    expect(j.topByLikes.length).toBeGreaterThanOrEqual(2);
+    expect(j.topByLikes[0].cardId).toBe(idB);
+    expect(j.topByLikes[0].likeCount).toBe(3);
+    expect(j.topByLikes[0].symbolName).toBe('bar');
+    expect(j.topByLikes[1].cardId).toBe(idA);
+    expect(j.topByLikes[1].likeCount).toBe(1);
   });
 });

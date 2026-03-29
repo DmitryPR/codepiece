@@ -24,9 +24,17 @@ export async function PUT(req: Request) {
   const norm = normalizeMemoInput(rawBody);
   if (!norm.ok) return NextResponse.json({ error: norm.error }, { status: 400 });
 
-  const db = getDb();
-  if (!cardExists(db, cardId)) return NextResponse.json({ error: 'card not found' }, { status: 404 });
+  try {
+    const db = getDb();
+    if (!cardExists(db, cardId)) return NextResponse.json({ error: 'card not found' }, { status: 404 });
 
-  setMemoBody(db, userId, cardId, norm.body);
-  return NextResponse.json({ ok: true });
+    setMemoBody(db, userId, cardId, norm.body);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[PUT /api/cards/memo]', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'internal server error' },
+      { status: 500 },
+    );
+  }
 }

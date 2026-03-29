@@ -39,8 +39,9 @@ flowchart LR
 ### Internal rating system (“good” / popular code)
 
 - **SPEC:** System to judge which code is good, popular, or valuable.
-- **Now:** Next card order is **`RANDOM()`** in SQLite ([`feed.ts`](../src/lib/feed.ts)); swipe counts are **not** aggregated for ranking or display.
-- **Backlog:** Aggregates from **`swipes`** (per **Card**, not per developer — see GUARDRAILS: **no “best developers” leaderboard**); spam / novelty guards; optional **ranked** or **weighted** feed once metrics exist.
+- **Partially shipped:** **`GET /api/dashboard/stats`** ([`app/api/dashboard/stats/route.ts`](../app/api/dashboard/stats/route.ts)) returns **snippet-level** aggregates (totals, **with memo** count, **top snippets by like count**) from SQLite via [`dashboard-stats.ts`](../src/lib/dashboard-stats.ts). The **topbar Stats** panel ([`app/app-shell.tsx`](../app/app-shell.tsx)) shows these metrics; after a **like**, the list **refetches** and the row can **reorder** (highlighted row, no motion animations). Rows show **symbol + `repo_label` + path** only (GUARDRAILS: no author leaderboard).
+- **Still random feed:** Next card order remains **`RANDOM()`** in [`feed.ts`](../src/lib/feed.ts) — the dashboard does **not** change **`pickNextCard`**.
+- **Backlog:** Spam / novelty guards; optional **score-biased** feed once product explicitly opts in; richer history UI.
 
 ### Discovery (“attractive or high-quality” surfacing)
 
@@ -51,7 +52,7 @@ flowchart LR
 ### Snippet memo (600-character personal note per card)
 
 - **SPEC:** Users can leave an optional **memo** on a snippet — max **600** Unicode **code points**, private-by-default for **(user, card)**.
-- **Shipped:** Table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`memo`** on **`GET /api/cards/next`**; UI **details + textarea + Save** ([`app/swipe-client.tsx`](../app/swipe-client.tsx)); validation in [`src/lib/memo.ts`](../src/lib/memo.ts); **`getMemoBody` / `setMemoBody`** in [`src/lib/feed.ts`](../src/lib/feed.ts).
+- **Shipped:** Table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`memo`** on **`GET /api/cards/next`**; UI **copy icon** then **memo (lined-note) icon** on the card title row opens a **popover** with **textarea + Save** ([`app/swipe-client.tsx`](../app/swipe-client.tsx)); validation in [`src/lib/memo.ts`](../src/lib/memo.ts); **`getMemoBody` / `setMemoBody`** in [`src/lib/feed.ts`](../src/lib/feed.ts).
 - **Follow-ups (optional):** rate limits; listing “all my memos”; grapheme-cluster length if you need stricter emoji counting than code points.
 
 ## From INITIAL — optional / later (implementation polish)
@@ -70,8 +71,8 @@ Production **Dockerfile**, **`compose.prod.yml`**, **CI** image push, **scan job
 ## Shipped UX (swipe card)
 
 - **`user-select: none`** on the draggable card so pointer-drag does not highlight text (copy is intentional via control only).
-- **Copy** next to the context summary copies **`snippet_text`** to the clipboard ([`app/swipe-client.tsx`](../app/swipe-client.tsx) — `CopySnippetButton`, Clipboard API + `execCommand` fallback).
-- **Personal memo** — collapsible **details**, **textarea** with **`n/600`** code-point counter, **Save memo** → **`PUT /api/cards/memo`**; **`summary` / `textarea`** excluded from swipe pointer capture.
+- **Copy** — duplicate-sheet **icon** on the title row (before memo) copies **`snippet_text`** ([`app/swipe-client.tsx`](../app/swipe-client.tsx) — `CopySnippetButton`, Clipboard API + `execCommand` fallback).
+- **Personal memo** — **memo icon** to the right of **Copy**, popover **textarea** with **`n/600`**, **Save** → **`PUT /api/cards/memo`**; memo popover and controls excluded from swipe pointer capture.
 
 ## See also
 

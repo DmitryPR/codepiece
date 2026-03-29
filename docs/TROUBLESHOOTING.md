@@ -8,15 +8,11 @@ Install Bun from **[bun.com/docs/installation](https://bun.com/docs/installation
 
 ## Port already in use (`EADDRINUSE`)
 
-Another process is bound to the dev port (default **4000**).
+The app is meant to run on **port 4000** only (`bun run dev`, `bun run start`, and Docker all use **4000**).
 
-- **macOS / Linux:** `lsof -i :4000` then `kill <pid>` (or `kill -9 <pid>` if needed).
-- **One-off different port** (dev):  
-  `bun run dev -- -p <port>`  
-  Example: `bun run dev -- -p 3001`
-- **Production server:**  
-  `bun run start -- -p <port>`
-- **Change the default permanently:** edit the **`dev`** and **`start`** scripts in [`package.json`](../package.json).
+- **macOS / Linux:** `lsof -i :4000` then `kill <pid>` (or `kill -9 <pid>` if needed) so **`bun run dev`** can bind again.
+- **Windows (PowerShell):** `Get-NetTCPConnection -LocalPort 4000` / Task Manager, or restart after closing the other process.
+- **Change the port** (not recommended — docs and compose assume **4000**): edit the **`-p 4000`** flags in the **`dev`**, **`dev:webpack`**, and **`start`** scripts in [`package.json`](../package.json) and the **`ports`** mapping in [`docker-compose.yml`](../docker-compose.yml) together.
 
 ## Dev server: Webpack instead of Turbopack
 
@@ -24,6 +20,35 @@ Default **`bun run dev`** uses **Turbopack**. If you need the classic bundler (r
 
 ```bash
 bun run dev:webpack
+```
+
+## Next dev: `Cannot find module './NNN.js'` (500 on `/` or APIs)
+
+### Why it happens (it is not your app code)
+
+With **`next dev`** using the **Webpack** bundler (script **`dev:webpack`**), Next writes many small numbered chunks under **`.next/server`**. Fast Refresh and incremental compiles update the **webpack runtime manifest** (which chunk IDs to load). Sometimes that manifest and the files on disk get **out of sync**: the runtime still **`require`s `./331.js`**, but that file was already removed or renamed in a later compile. Then any route that touches that bundle throws **`MODULE_NOT_FOUND`**, you often get **500**, and Next’s **`body { display: none }`** FOUC guard can leave the page **blank**.
+
+Typical triggers: **many hot reloads**, **stopping the server mid-compile**, **switching git branches** while dev is running, or **editing `next.config` / dependencies** without a clean rebuild. Default **`bun run dev`** uses **Turbopack**, which uses a different pipeline and **this class of bug is much rarer** than with **`bun run dev:webpack`**.
+
+### Fix
+
+Stop the dev server, delete the cache, start again:
+
+```bash
+rm -rf .next
+bun run dev
+```
+
+Or one step (same as above):
+
+```bash
+bun run dev:fresh
+```
+
+If you **must** use Webpack:
+
+```bash
+bun run dev:webpack:fresh
 ```
 
 ## Docker: hot reload or edits not showing

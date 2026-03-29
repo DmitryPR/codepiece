@@ -1,15 +1,19 @@
-# Dev-only: no `docker build` — pulls `oven/bun` and runs Next with your tree mounted.
+# Dev-only: build `Dockerfile.dev` (Bun + build tools for better-sqlite3), then bind-mount the repo.
 # First start runs `bun install` inside the container (once per fresh volume).
 # Polling env vars help file watching when the repo is bind-mounted (e.g. Docker Desktop on macOS).
 
 services:
   web:
-    image: oven/bun:1
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: codepiece-hackathon-web:dev
     working_dir: /app
     ports:
       - "4000:4000"
     environment:
       CODEPIECE_DB: /data/codepiece.db
+      PORT: "4000"
       NEXT_TELEMETRY_DISABLED: "1"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
