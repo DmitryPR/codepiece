@@ -50,14 +50,9 @@ flowchart LR
 
 ### Snippet memo (600-character personal note per card)
 
-- **SPEC:** Users can leave an optional **memo** on a snippet — max **600 characters**, private-by-default for **(user, card)**.
-- **Now:** **Not implemented** — only likes/skips are stored; no memo text.
-- **Backlog / implementation sketch:**
-  - **Storage:** e.g. table **`snippet_memos`** with **`user_id`**, **`card_id`**, **`body`** (capped string), **`updated_at`**; unique **`(user_id, card_id)`** with upsert semantics (replace memo on edit).
-  - **Validation:** reject **`body`** over **600** Unicode code points (or documented equivalent); trim whitespace; empty string = delete memo.
-  - **API:** e.g. **`GET`** memo for current user + card (optional), **`PUT`/`PATCH`** to set or clear; same session/cookie model as swipes.
-  - **UI:** Small control on the card (expandable field or modal) with live **character count** (`n/600`); plain text only.
-  - **GUARDRAILS:** Treat memo as **untrusted text** — no HTML rendering; escape or strip; optional rate limits per user (see **[`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)**).
+- **SPEC:** Users can leave an optional **memo** on a snippet — max **600** Unicode **code points**, private-by-default for **(user, card)**.
+- **Shipped:** Table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`memo`** on **`GET /api/cards/next`**; UI **details + textarea + Save** ([`app/swipe-client.tsx`](../app/swipe-client.tsx)); validation in [`src/lib/memo.ts`](../src/lib/memo.ts); **`getMemoBody` / `setMemoBody`** in [`src/lib/feed.ts`](../src/lib/feed.ts).
+- **Follow-ups (optional):** rate limits; listing “all my memos”; grapheme-cluster length if you need stricter emoji counting than code points.
 
 ## From INITIAL — optional / later (implementation polish)
 
@@ -76,6 +71,7 @@ Production **Dockerfile**, **`compose.prod.yml`**, **CI** image push, **scan job
 
 - **`user-select: none`** on the draggable card so pointer-drag does not highlight text (copy is intentional via control only).
 - **Copy** next to the context summary copies **`snippet_text`** to the clipboard ([`app/swipe-client.tsx`](../app/swipe-client.tsx) — `CopySnippetButton`, Clipboard API + `execCommand` fallback).
+- **Personal memo** — collapsible **details**, **textarea** with **`n/600`** code-point counter, **Save memo** → **`PUT /api/cards/memo`**; **`summary` / `textarea`** excluded from swipe pointer capture.
 
 ## See also
 

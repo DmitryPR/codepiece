@@ -1,6 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  MEMO_MAX_CODE_POINTS,
+  clampToMaxCodePoints,
+  countCodePoints,
+  normalizeMemoInput,
+} from '@/src/lib/memo';
 
 const HEURISTIC_PREFIX = '[heuristic] ';
 
@@ -15,6 +21,7 @@ type Card = {
   repoLabel: string;
   license: string;
   commitSha: string | null;
+  memo: string | null;
 };
 
 function splitContextSummary(raw: string): { isHeuristic: boolean; text: string } {
@@ -85,6 +92,10 @@ export function SwipeClient() {
   const [err, setErr] = useState<string | null>(null);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [memoDraft, setMemoDraft] = useState('');
+  const [memoOpen, setMemoOpen] = useState(false);
+  const [memoSaved, setMemoSaved] = useState(false);
+  const [memoSaving, setMemoSaving] = useState(false);
   const startXRef = useRef(0);
   const dragActiveRef = useRef(false);
 
@@ -110,8 +121,16 @@ export function SwipeClient() {
       return;
     }
     try {
-      const j = (await r.json()) as { card?: Card | null };
-      setCard(j.card ?? null);
+      const j = (await r.json()) as { card?: (Omit<Card, 'memo'> & { memo?: string | null }) | null };
+      const c = j.card;
+      setCard(
+        c
+          ? {
+              ...c,
+              memo: c.memo ?? null,
+            }
+          : null,
+      );
     } catch {
       setUserReady(true);
       setCard(null);
@@ -157,10 +176,18 @@ export function SwipeClient() {
           return;
         }
 
-        const j = (await r.json()) as { card?: Card | null };
+        const j = (await r.json()) as { card?: (Omit<Card, 'memo'> & { memo?: string | null }) | null };
         if (!alive) return;
         setUserReady(true);
-        setCard(j.card ?? null);
+        const c = j.card;
+        setCard(
+          c
+            ? {
+                ...c,
+                memo: c.memo ?? null,
+              }
+            : null,
+        );
       } catch (e) {
         if (!alive) return;
         setUserReady(true);
@@ -172,6 +199,47 @@ export function SwipeClient() {
       alive = false;
     };
   }, [loadNext]);
+
+  useEffect(() => {
+    if (card && card !== null) {
+      setMemoDraft(card.memo ?? '');
+      setMemoOpen(Boolean(card.memo));
+    } else {
+      setMemoDraft('');
+      setMemoOpen(false);
+    }
+    setMemoSaved(false);
+  }, [card?.id]);
+
+  const saveMemo = async () => {
+    if (!card) return;
+    const norm = normalizeMemoInput(memoDraft);
+    if (!norm.ok) {
+      setErr(norm.error);
+      return;
+    }
+    setErr(null);
+    setMemoSaving(true);
+    try {
+      const r = await fetch('/api/cards/memo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ cardId: card.id, body: memoDraft }),
+      });
+      if (!r.ok) {
+        setErr(await r.text());
+        return;
+      }
+      setMemoDraft(norm.body);
+      setCard((c) => (c ? { ...c, memo: norm.body === '' ? null : norm.body } : c));
+      if (norm.body !== '') setMemoOpen(true);
+      setMemoSaved(true);
+      window.setTimeout(() => setMemoSaved(false), 2000);
+    } finally {
+      setMemoSaving(false);
+    }
+  };
 
   const swipe = async (action: 'like' | 'skip') => {
     if (!card) return;
@@ -216,7 +284,7 @@ export function SwipeClient() {
     // Do not capture when the gesture starts on controls: capture retargets pointerup to the
     // article and the button never receives a full click — Skip/Like would not fire.
     const t = e.target as HTMLElement | null;
-    if (t?.closest('button, a, input, textarea, select, [role="button"]')) return;
+    if (t?.closest('button, a, input, textarea, select, summary, [role="button"]')) return;
 
     e.currentTarget.setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
@@ -313,6 +381,93 @@ export function SwipeClient() {
       >
         {card.snippetText}
       </pre>
+      <div
+        style={{
+          padding: '10px 16px 12px',
+          borderTop: '1px solid #2f3336',
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+        }}
+      >
+        <details
+          key={card.id}
+          open={memoOpen}
+          onToggle={(e) => setMemoOpen(e.currentTarget.open)}
+          style={{ fontSize: 13 }}
+        >
+          <summary
+            style={{
+              cursor: 'pointer',
+              opacity: 0.8,
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+            }}
+          >
+            Personal memo (optional, private)
+          </summary>
+          <div style={{ marginTop: 10 }}>
+            <textarea
+              value={memoDraft}
+              onChange={(e) => setMemoDraft(clampToMaxCodePoints(e.target.value))}
+              rows={3}
+              placeholder="Short note on this snippet…"
+              aria-label="Personal memo for this snippet"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                resize: 'vertical',
+                minHeight: 72,
+                maxHeight: 200,
+                padding: 10,
+                fontSize: 13,
+                fontFamily: 'system-ui, sans-serif',
+                lineHeight: 1.4,
+                borderRadius: 8,
+                border: '1px solid #38444d',
+                background: '#0b0d0f',
+                color: '#e7e9ea',
+              }}
+            />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                marginTop: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span style={{ fontSize: 11, opacity: 0.55 }}>
+                {countCodePoints(memoDraft)} / {MEMO_MAX_CODE_POINTS}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {memoSaved ? (
+                  <span style={{ fontSize: 12, color: '#6ee7b7' }} aria-live="polite">
+                    Saved
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={memoSaving}
+                  onClick={() => void saveMemo()}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 8,
+                    border: '1px solid #536471',
+                    background: 'transparent',
+                    color: '#e7e9ea',
+                    cursor: memoSaving ? 'wait' : 'pointer',
+                    opacity: memoSaving ? 0.6 : 1,
+                  }}
+                >
+                  {memoSaving ? 'Saving…' : 'Save memo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
       <footer style={{ padding: 12, fontSize: 12, opacity: 0.7, borderTop: '1px solid #2f3336' }}>
         {card.repoLabel} · {card.license} · {card.sourcePath} (lines {card.lineStart}–{card.lineEnd})
         {card.commitSha ? ` · ${card.commitSha.slice(0, 7)}` : ''}

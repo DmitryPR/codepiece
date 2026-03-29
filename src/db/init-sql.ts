@@ -26,4 +26,12 @@ CREATE TABLE IF NOT EXISTS swipes (
 );
 CREATE INDEX IF NOT EXISTS idx_swipes_user ON swipes (user_id);
 CREATE INDEX IF NOT EXISTS idx_swipes_card ON swipes (card_id);
+CREATE TABLE IF NOT EXISTS snippet_memos (
+  user_id TEXT NOT NULL,
+  card_id TEXT NOT NULL,
+  body TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, card_id)
+);
+CREATE INDEX IF NOT EXISTS idx_snippet_memos_user ON snippet_memos (user_id);
 `;

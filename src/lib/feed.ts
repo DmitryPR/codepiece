@@ -1,8 +1,8 @@
-import { eq, sql, notInArray } from 'drizzle-orm';
+import { and, eq, sql, notInArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { Db } from '../db/client';
 import * as schema from '../db/schema';
-import { cards, swipes, users } from '../db/schema';
+import { cards, snippetMemos, swipes, users } from '../db/schema';
 
 /** Drizzle Bun + better-sqlite3 share the same call shape at runtime; union `Db` breaks `.select({...})` inference. */
 type SqliteQueryDb = BetterSQLite3Database<typeof schema>;
@@ -14,6 +14,16 @@ export function ensureUser(db: Db, id: string, displayName?: string | null) {
     .values({ id, displayName: displayName ?? null, createdAt: Date.now() })
     .onConflictDoNothing()
     .run();
+}
+
+export function cardExists(db: Db, cardId: string): boolean {
+  return (
+    q(db)
+      .select({ id: cards.id })
+      .from(cards)
+      .where(eq(cards.id, cardId))
+      .get() !== undefined
+  );
 }
 
 export function pickNextCard(db: Db, userId: string) {
@@ -38,6 +48,34 @@ export function recordSwipe(db: Db, swipeId: string, userId: string, cardId: str
       cardId,
       action,
       createdAt: Date.now(),
+    })
+    .run();
+}
+
+export function getMemoBody(db: Db, userId: string, cardId: string): string | null {
+  const row = q(db)
+    .select({ body: snippetMemos.body })
+    .from(snippetMemos)
+    .where(and(eq(snippetMemos.userId, userId), eq(snippetMemos.cardId, cardId)))
+    .get();
+  return row?.body ?? null;
+}
+
+/** `body` must already be validated (trimmed, length). Empty string deletes the row. */
+export function setMemoBody(db: Db, userId: string, cardId: string, body: string): void {
+  const d = q(db);
+  if (body === '') {
+    d.delete(snippetMemos)
+      .where(and(eq(snippetMemos.userId, userId), eq(snippetMemos.cardId, cardId)))
+      .run();
+    return;
+  }
+  const now = Date.now();
+  d.insert(snippetMemos)
+    .values({ userId, cardId, body, updatedAt: now })
+    .onConflictDoUpdate({
+      target: [snippetMemos.userId, snippetMemos.cardId],
+      set: { body, updatedAt: now },
     })
     .run();
 }

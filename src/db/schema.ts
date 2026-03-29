@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -26,3 +26,16 @@ export const swipes = sqliteTable('swipes', {
   action: text('action').notNull(),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
 });
+
+export const snippetMemos = sqliteTable(
+  'snippet_memos',
+  {
+    userId: text('user_id').notNull(),
+    cardId: text('card_id').notNull(),
+    body: text('body').notNull(),
+    updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.cardId] }),
+  }),
+);

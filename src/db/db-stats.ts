@@ -36,6 +36,12 @@ const db = new Database(path, { readonly: true });
 const users = db.query('SELECT COUNT(*) AS n FROM users').get() as { n: number };
 const cards = db.query('SELECT COUNT(*) AS n FROM cards').get() as { n: number };
 const swipes = db.query('SELECT COUNT(*) AS n FROM swipes').get() as { n: number };
+let snippetMemos = 0;
+try {
+  snippetMemos = (db.query('SELECT COUNT(*) AS n FROM snippet_memos').get() as { n: number }).n;
+} catch {
+  /* legacy DB before snippet_memos table */
+}
 
 const page = db.query('PRAGMA page_count').get() as { page_count: number };
 const psize = db.query('PRAGMA page_size').get() as { page_size: number };
@@ -63,9 +69,10 @@ console.log(`Database: ${path}`);
 console.log(`Logical size (page_count × page_size): ${fmtKiB(logicalBytes)}`);
 console.log('');
 console.log('Rows');
-console.log(`  users:  ${users.n}`);
-console.log(`  cards:  ${cards.n}`);
-console.log(`  swipes: ${swipes.n}`);
+console.log(`  users:          ${users.n}`);
+console.log(`  cards:          ${cards.n}`);
+console.log(`  swipes:         ${swipes.n}`);
+console.log(`  snippet_memos:  ${snippetMemos}`);
 console.log('');
 console.log('On disk');
 fileSizeLabel(path, 'main (.db)');

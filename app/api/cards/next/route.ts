@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/src/db/client';
-import { pickNextCard } from '@/src/lib/feed';
+import { getMemoBody, pickNextCard } from '@/src/lib/feed';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -14,6 +14,7 @@ export async function GET(req: Request) {
   const db = getDb();
   const card = pickNextCard(db, userId);
   if (!card) return NextResponse.json({ card: null });
+  const memo = getMemoBody(db, userId, card.id);
   return NextResponse.json({
     card: {
       id: card.id,
@@ -26,6 +27,7 @@ export async function GET(req: Request) {
       repoLabel: card.repoLabel,
       license: card.license,
       commitSha: card.commitSha,
+      memo,
     },
   });
 }

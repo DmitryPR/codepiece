@@ -41,12 +41,13 @@ CLI: **`bun run scan -- --force`** (after **`TARGET_REPO=...`**) reprocesses all
 **Who writes what**
 
 - **`bun run scan`** (Bun) **writes** **Card** rows (and updates scan memory on disk) into the DB configured by **`CODEPIECE_DB`**. It does not record user ratings.
-- The **running Next.js** app (Route Handlers / server code) **reads** **Card** rows to build the feed (`/api/cards/next`, etc.) and **writes** **ratings / swipes** (and **User** rows) when someone likes or skips — each rating is **persisted in the same database**. It does **not** run the repo scanner or insert **Card** rows.
+- The **running Next.js** app (Route Handlers / server code) **reads** **Card** rows to build the feed (`/api/cards/next`, etc.) and **writes** **ratings / swipes** (and **User** rows) when someone likes or skips — each rating is **persisted in the same database**. It does **not** run the repo scanner or insert **Card** rows. It also **reads/writes** per-user **snippet memos** (optional private note per card, max **600** Unicode code points): table **`snippet_memos`**, **`PUT /api/cards/memo`**, and **`memo`** on **`GET /api/cards/next`** when a card is returned.
 
 - Use one **simple SQLite database** (file-backed) for:
   - **Cards** — one row per showable snippet; **inserted/updated only by the Bun scanner**. Next.js **reads** them for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
   - **Users** — minimal profile only (e.g. id + optional display label); **created by Next.js** on first visit / lazy signup. **No OAuth**; no verified GitHub link required for v1.
   - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful; **inserted by Next.js** when the user swipes (e.g. `POST /api/swipes`), not by the Bun scanner.
+  - **Snippet memos** — optional **plain-text** note per **(user, card)**; **Next.js** only (`PUT /api/cards/memo`, upsert or clear when empty).
   - **Seen cards** — enough to avoid showing the same snippet again (or to power recommendations later).
 - Keep a **small schema** — not a distributed data platform.
 - Scanner and Next.js must share the **same database** (v1: the same **`CODEPIECE_DB`** file) so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.
