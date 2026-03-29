@@ -19,13 +19,20 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Data storage
 
-- Use a **simple database** for:
-  - **Cards** — one row per showable snippet; **filled by the local Bun scanner** (`bun run scan`), not by the web app. The Next.js API only **reads** cards for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
+**Write path vs read path**
+
+- **`bun run scan`** (Bun) **writes** into the database: **Card** rows (and optionally scan-memory tables), using the same **`DATABASE_URL`** (or equivalent) as the app.
+- The **running Next.js** app **only reads** that database for cards, users, and swipes (Route Handlers / server code). It does not run the repo scanner.
+
+Pick **Postgres** or any **lightweight relational** store (**SQLite** is fine). Both are valid for v1; Postgres pairs naturally with Docker Compose, SQLite with a single file on disk.
+
+- Use one **simple database** for:
+  - **Cards** — one row per showable snippet; **inserted/updated only by the Bun scanner**. Next.js **reads** them for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
   - **Users** — minimal profile only (e.g. id + optional display label). **No OAuth**; no verified GitHub link required for v1.
   - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful.
   - **Seen cards** — enough to avoid showing the same snippet again (or to power recommendations later).
-- SQLite (file or volume) is enough for v1; Postgres in Docker is fine if you want one `docker compose` stack that matches production-shaped habits. The point is: **relational, small schema**, not a distributed data platform.
-- The scanner and the app must use the **same database file** (or same DSN) so a successful scan immediately **materializes** the card index the UI can draw from.
+- Keep a **small schema** — not a distributed data platform.
+- Scanner and Next.js must share the **same `DATABASE_URL`** so a successful scan immediately **materializes** the card index the running app can serve.
 
 ## Docker
 
@@ -46,16 +53,16 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Bun scan CLI: memory + card index
 
-Running **`bun run scan`** (local Bun) should do **both** of the following in one tool:
+Running **`bun run scan`** (local Bun) should do **both** of the following in one tool, writing to **Postgres or your chosen lightweight DB** (same connection the Next.js app uses):
 
-1. **Scan memory** — update a **memory file** or table of **processed** vs **skipped** files/symbols (path, reason: too large, generated, parse error, etc.) with **deterministic keys** (repo id + file path + content hash or commit SHA) so reruns are idempotent.
-2. **Card index** — **insert or upsert** rows in the **`Card`** table (same DB as the app). That is the authoritative **index of snippets to show**; until the scan has run (or after a fresh DB), the feed may be empty.
+1. **Scan memory** — update a **memory file** or **DB table** of **processed** vs **skipped** files/symbols (path, reason: too large, generated, parse error, etc.) with **deterministic keys** (repo id + file path + content hash or commit SHA) so reruns are idempotent.
+2. **Card index** — **insert or upsert** rows in the **`Card`** table. That is the authoritative **index of snippets to show**; until the scan has run (or after a fresh DB), the feed may be empty.
 
-The web UI never parses repos; it only consumes **Card** rows produced by this CLI.
+The Next.js app **reads** these rows; it never parses repos on the server for ingestion. **Card** rows come only from this Bun CLI (for v1).
 
 ## Scan memory (idempotent ingestion)
 
-- The memory artifact (JSON alongside the project or rows in SQLite) records what was already scanned and what was skipped. It works together with content hashing so unchanged files are not fully re-mined on every run.
+- The memory artifact (JSON alongside the project, or rows in **Postgres / SQLite**) records what was already scanned and what was skipped. It works together with content hashing so unchanged files are not fully re-mined on every run.
 
 ## What we are not building in v1
 
