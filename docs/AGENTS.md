@@ -6,16 +6,18 @@ This file orients coding agents: **what to read first**, **which docs override o
 
 0. **[`COMMANDS.md`](COMMANDS.md)** — **copy-paste `bun run …` reference** (dev, scan, tests, DB). Read this first when you need to run or verify anything. Lives in **`docs/`** with the rest of the agent-oriented docs.
 1. **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — implementation checklist, API sketch, data model. **Primary execution contract for v1 features.**
-2. **[`TECHNICAL.md`](TECHNICAL.md)** — stack details: **Bun** as package manager, **`bun:sqlite`** / **`better-sqlite3`** on **`CODEPIECE_DB`**, Bun scanner vs Next.js, env table, who writes Cards vs swipes, local scanning.
-3. **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)** — when changing **Docker / deploy / rollout** (prod image, **`compose.prod.yml`**, CI). **Not** required for core feature work.
-4. **[`GUARDRAILS.md`](GUARDRAILS.md)** — hard constraints (attribution, XSS, no dark patterns). Apply to UI and data you store on **Card** rows.
-5. **[`SPEC.md`](SPEC.md)** — product intent and long-term features. **Do not implement everything here in v1** (see conflicts below).
+2. **[`../plan/FEATURES.md`](../plan/FEATURES.md)** — **after INITIAL**, skim when planning **beyond v1**: SPEC gaps (matching, ratings, learning loop), optional polish, and how they differ from what is shipped.
+3. **[`TECHNICAL.md`](TECHNICAL.md)** — stack details: **Bun** as package manager, **`bun:sqlite`** / **`better-sqlite3`** on **`CODEPIECE_DB`**, Bun scanner vs Next.js, env table, who writes Cards vs swipes, local scanning.
+4. **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)** — when changing **Docker / deploy / rollout** (prod image, **`compose.prod.yml`**, CI). **Not** required for core feature work.
+5. **[`GUARDRAILS.md`](GUARDRAILS.md)** — hard constraints (attribution, XSS, no dark patterns). Apply to UI and data you store on **Card** rows.
+6. **[`SPEC.md`](SPEC.md)** — product intent and long-term features. **Do not implement everything here in v1** (see conflicts below).
 
 ## Authority and scope (avoid scope creep)
 
 | Topic | v1 source of truth |
 |--------|-------------------|
 | What to build now | **`plan/INITIAL.md`** + **`TECHNICAL.md`** |
+| Post-v1 / SPEC-shaped backlog | **`plan/FEATURES.md`** (after v1 checklist is satisfied) |
 | Matching owners/committers, messaging | **Out of scope** (in SPEC narrative but deferred in plan) |
 | OAuth | **Out of scope** — anonymous session only |
 | Card ingestion | **Bun CLI** only; Next.js **reads** Cards, **writes** swipes |
@@ -33,6 +35,10 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 
 - Ordered checklist, tables, API list, mermaid diagram, explicit in/out of scope.
 - Env vars are summarized in **[`TECHNICAL.md`](TECHNICAL.md)**. **`TARGET_REPO`** quick default: [`samples/mini-algorithms/`](../samples/mini-algorithms/) (see [`samples/README.md`](../samples/README.md)).
+
+### [`plan/FEATURES.md`](../plan/FEATURES.md) — **backlog index**
+
+- Maps **[`SPEC.md`](SPEC.md)** to **gaps** (matching, internal ratings, learning UI) and mirrors **optional/later** items from **INITIAL**. Use when the task is **not** on the v1 checklist.
 
 ### [`TECHNICAL.md`](TECHNICAL.md) — **strong**
 
@@ -62,8 +68,8 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 1. Use **`docs/COMMANDS.md`** when running **dev**, **scan**, **tests**, or **db:stats** / **db:push** so flags and env match the repo.
 2. Implement in the order of **`plan/INITIAL.md`** checklist.
 3. After each vertical slice, re-read **GUARDRAILS** for anything touching displayed code or user data.
-4. When unsure whether a SPEC feature is v1, **default to omit** unless INITIAL lists it.
+4. When unsure whether a SPEC feature is v1, **default to omit** unless INITIAL lists it; confirm against **`plan/FEATURES.md`** for queued post-v1 work.
 
 ## See also
 
-- **[`COMMANDS.md`](COMMANDS.md)** · **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**
+- **[`COMMANDS.md`](COMMANDS.md)** · **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/FEATURES.md`](../plan/FEATURES.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**

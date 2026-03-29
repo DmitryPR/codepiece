@@ -92,12 +92,13 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/TECHNICAL.
 
 Items **1–6** are implemented: scaffold, **Drizzle** + **SQLite** on **`CODEPIECE_DB`** (**`bun:sqlite`** / **`better-sqlite3`**), scanner CLI (memory + card upserts), ingest against **`TARGET_REPO`**, API routes (`/api/users`, `/api/cards/next`, `/api/swipes`), Next.js swipe UI (**pointer drag** + **Skip/Like** buttons, **attribution** footer incl. optional **short commit SHA**, **heuristic** context called out per ingestion rules). **`bun run seed:samples`** loads demo cards. **Package manager:** **Bun** only. **Automated checks:** `bun test` and `bun run build` (see [`docs/TEST-SPEC.md`](../docs/TEST-SPEC.md)).
 
-**Optional / later (not blocking v1):** **`.tsx`** ingestion; **display name** field on **`POST /api/users`** in the UI; formal **Drizzle migration** files beyond runtime **`INIT_SQL`**; **keyboard** shortcuts for like/skip.
+**Extended backlog (SPEC gaps + optional polish):** **[`FEATURES.md`](FEATURES.md)** — single index for post-v1 work; v1 optional items (`.tsx` ingestion, display name in UI, Drizzle migrations beyond **`INIT_SQL`**, keyboard shortcuts) are listed there.
 
 **Dev Compose** (bind-mounted **`docker-compose.yml`**) and **README** Docker notes are for local use only. **Production Compose + image + rollout** are **not** done yet — see **[`PRODUCTION.md`](PRODUCTION.md)**.
 
 ## See also
 
+- **[`FEATURES.md`](FEATURES.md)** — backlog vs **SPEC** (matching, ratings, learning loop) + optional v1 polish  
 - [`docs/SPEC.md`](../docs/SPEC.md) — product goals and mechanics  
 - [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md) — license, privacy, UX limits  
 - [`docs/TECHNICAL.md`](../docs/TECHNICAL.md) — stack and ingestion rules  
