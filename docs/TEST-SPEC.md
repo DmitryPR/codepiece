@@ -22,6 +22,8 @@ bun test
 bun run build
 ```
 
+**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:3000](http://localhost:3000)** (or set **`PORT`**). See **[README.md](../README.md)** for the full dev vs production flow.
+
 ## Environment used in tests
 
 - **`bun test`** runs under the **Bun** runtime: the DB layer uses **`bun:sqlite`** (see [`src/db/client.ts`](../src/db/client.ts)). **`next build` / `next dev`** run on **Node** and use **`better-sqlite3`**. Both hit the same schema and SQL.

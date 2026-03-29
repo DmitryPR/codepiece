@@ -16,6 +16,26 @@ bun test
 bun run dev
 ```
 
+### `bun run build` (production build)
+
+`bun run build` runs **`next build`**. It:
+
+- Type-checks the project and lints (per Next.js defaults).
+- Compiles the **Next.js App Router** app (`app/`) into an optimized production bundle under **`.next/`**.
+
+It does **not** start a server; it only produces the build output.
+
+To **serve** that build locally:
+
+```bash
+bun run start   # runs `next start`
+```
+
+By default the app is available at **[http://localhost:3000](http://localhost:3000)**. Override the port with **`PORT`** (e.g. `PORT=4000 bun run start`). For local development with hot reload, use **`bun run dev`** instead (same default URL unless you pass `-p` / `--port` to `next dev`).
+
+Use the **same `CODEPIECE_DB`** for `bun run scan`, `bun run dev`, and `bun run start` so cards and swipes share one SQLite file (default: **`data/codepiece.db`** relative to the repo root).
+
+- **[`docs/TEST-SPEC.md`](docs/TEST-SPEC.md)** — test commands and DB/runtime notes  
 - **[`docs/SPEC.md`](docs/SPEC.md)** — product specification  
 - **[`docs/GUARDRAILS.md`](docs/GUARDRAILS.md)** — what not to do (product guardrails)  
 - **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)** — stack, storage, ingestion, Docker  
