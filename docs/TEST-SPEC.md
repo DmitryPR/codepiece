@@ -70,7 +70,7 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 ## Manual smoke (after scan + dev)
 
 1. `bun run seed:samples` (or `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force`)
-2. `bun run dev`
+2. `bun run dev` (Turbopack + hot reload; **`bun run dev:webpack`** if you need the Webpack dev server)
 3. Open **[http://localhost:4000](http://localhost:4000)** — a card should appear; Like/Skip should succeed in the network tab.
 
 ## Docker (optional manual check)

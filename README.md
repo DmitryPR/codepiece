@@ -29,13 +29,24 @@ From the **repo root**:
 bun install
 ```
 
-**Development** (hot reload):
+**Development** (hot reload / HMR):
 
 ```bash
 bun run dev
 ```
 
-When Next.js prints *Ready*, open **[http://localhost:4000](http://localhost:4000)**.
+This runs **Next.js dev** with **Turbopack** (fast refresh for React components and quick rebuilds when you edit files under **`app/`**, **`src/`**, etc.). When it prints *Ready*, open **[http://localhost:4000](http://localhost:4000)**. Save a file and the browser should update without a full reload (Fast Refresh); **Route Handlers** and server code typically recompile on the next request.
+
+If you need the classic Webpack dev server instead (e.g. troubleshooting), use **`bun run dev:webpack`**.
+
+**Rebuild the production bundle and run it locally** (“redeploy” on your machine):
+
+```bash
+bun run build
+bun run start
+```
+
+Stop with **Ctrl+C**. There is no hosted deploy wired in this repo yet — see **[`plan/PRODUCTION.md`](plan/PRODUCTION.md)** for a Compose-based production image plan.
 
 **Production** (optimized bundle):
 
@@ -52,13 +63,23 @@ Use the **same `CODEPIECE_DB`** for `bun run scan`, `bun run dev`, and `bun run 
 
 ### Docker (optional)
 
-No custom image: Compose uses **`oven/bun:1`**, mounts the repo and **`./data`**, and runs **`bun install`** then **`bun run dev`** (port **4000**, host **`0.0.0.0`**).
+No custom image: Compose uses **`oven/bun:1`**, mounts the repo and **`./data`**, and runs **`bun install`** then **`bun run dev`** (port **4000**, **`--turbopack`**, host **`0.0.0.0`**).
 
 ```bash
 docker compose up
 ```
 
+**Hot reload in Docker:** Edits on your machine appear in the container via the bind mount. **`WATCHPACK_POLLING`** / **`CHOKIDAR_USEPOLLING`** are enabled in **[`docker-compose.yml`](docker-compose.yml)** so file watching works reliably on macOS/Windows Docker Desktop. If changes still don’t show, restart with **`docker compose restart web`**.
+
 Open **[http://localhost:4000](http://localhost:4000)**. Run **`bun run scan`** on the **host** with **`CODEPIECE_DB=data/codepiece.db`** so cards land in the same SQLite file the container reads.
+
+**Refresh the dev container** after dependency changes (reinstall + dev server):
+
+```bash
+docker compose up --build --force-recreate
+```
+
+(`--build` is a no-op for this file-only image; **`--force-recreate`** restarts the service.)
 
 Then:
 
