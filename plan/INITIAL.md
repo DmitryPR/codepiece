@@ -8,7 +8,7 @@ Pre-review roadmap for implementers and coding agents. Follow **[`docs/technical
 
 - Swipe UX (like / skip) with persistence.
 - Users, swipes, and “seen” cards in a simple relational store.
-- TypeScript-only ingestion pipeline and scan memory.
+- TypeScript-only ingestion: local **`bun run scan`** updates **scan memory** and **fills the `Card` index** in the app DB for the swipe feed.
 - Docker Compose to run the app stack locally.
 
 **Explicitly defer**
@@ -24,20 +24,20 @@ Pre-review roadmap for implementers and coding agents. Follow **[`docs/technical
 flowchart LR
   subgraph docker [DockerCompose]
     web[NextApp_API]
-    db[(SQLite_or_Postgres)]
+    db[(App_DB)]
   end
-  cli[ScanCLI]
+  cli[Bun_scan_CLI]
   mem[scan_memory]
   repo[TargetRepo]
   cli --> repo
   cli --> mem
-  cli --> db
-  web --> db
+  cli -->|"upsert_Card_rows"| db
+  web -->|"read_Cards"| db
 ```
 
-- **Next.js** hosts the UI and **Route Handlers** (or `/api/*`) so authoritative logic stays server-side ([`docs/technical.md`](../docs/technical.md)).
-- **Scanner** is a **Bun** CLI run **locally** against a **filesystem path** to a cloned repo (same machine as development). Invoke with `bun run scan` (or a one-off compose run with the repo path **mounted**). No remote ingestion service.
-- **Scan memory** (JSON file or DB rows): deterministic keys (`repoId`, path, `contentHash` or commit SHA) for **processed** vs **skipped** + reason, for idempotent runs.
+- **Next.js** hosts the UI and **Route Handlers** (or `/api/*`) so authoritative logic stays server-side ([`docs/technical.md`](../docs/technical.md)). It **reads** `Card` rows from the DB; it does not scan source trees.
+- **`bun run scan`** is a **Bun** CLI run **locally** against a **filesystem path** to a cloned repo (`TARGET_REPO`). It must (1) update **scan memory** for idempotency and (2) **insert/upsert** the **`Card`** table in the **same database** the app uses — that table is the **index of snippets** shown in the swipe feed. No remote ingestion service.
+- Until a scan has populated **Card** rows, `/api/cards/next` may return empty; document this in the README quick start.
 
 ## Data model (minimal)
 
@@ -58,6 +58,7 @@ Implement with one ORM/query layer (Drizzle, Prisma, or Kysely — pick one; **S
 4. Use **TypeScript compiler API** or **ts-morph** to collect **functions** and **methods** with body **under ~200 lines**; skip oversize symbols; on parse failure, record skip reason in scan memory.
 5. **Context**: prefer JSDoc or first line of a leading block comment; otherwise a short heuristic from name + signature, stored with a flag or prefix so UI can label it as non-author docs.
 6. **Idempotency**: use scan memory + content hash so unchanged files are not fully reprocessed every run.
+7. **Persist cards**: for each accepted symbol, **upsert** a **Card** row in the app DB (snippet text, path, lines, context, provenance). This step is what **fills the feed index**; the API only selects from these rows.
 
 ## API surface (minimal)
 
@@ -89,8 +90,8 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/technical.
 
 1. **Scaffold** the repo: `package.json`, `tsconfig`, flat `src/` (or minimal `apps/web` only if you split later — prefer flat if it stays simpler).
 2. **Database**: schema + migrations; wire SQLite (or Postgres if compose uses a DB service).
-3. **Scanner CLI** + **scan memory** read/write.
-4. **Ingest**: run scanner locally against `TARGET_REPO` (path to a clone on disk; document an example).
+3. **Scanner CLI** (`bun run scan`): **scan memory** read/write **and** **Card** upserts into the **shared** app database.
+4. **Ingest**: run scanner locally against `TARGET_REPO`; confirm **Card** count increases and `/api/cards/next` returns data (document in README).
 5. **API** routes for users, next card, swipes; verify with **curl** or a tiny test script.
 6. **Next.js** page: card display + swipe + API integration.
 7. **`Dockerfile`** + **`docker-compose.yml`** + short **Quick start** in [`README.md`](../README.md).
