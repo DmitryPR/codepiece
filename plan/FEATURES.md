@@ -48,6 +48,17 @@ flowchart LR
 - **Now:** “Quality” is mostly **ingestion** heuristics (size limits, JSDoc/heuristic context, path filters) — not a scored feed.
 - **Backlog:** Connect discovery to **internal ratings** and safer ranking when that layer exists.
 
+### Snippet memo (600-character personal note per card)
+
+- **SPEC:** Users can leave an optional **memo** on a snippet — max **600 characters**, private-by-default for **(user, card)**.
+- **Now:** **Not implemented** — only likes/skips are stored; no memo text.
+- **Backlog / implementation sketch:**
+  - **Storage:** e.g. table **`snippet_memos`** with **`user_id`**, **`card_id`**, **`body`** (capped string), **`updated_at`**; unique **`(user_id, card_id)`** with upsert semantics (replace memo on edit).
+  - **Validation:** reject **`body`** over **600** Unicode code points (or documented equivalent); trim whitespace; empty string = delete memo.
+  - **API:** e.g. **`GET`** memo for current user + card (optional), **`PUT`/`PATCH`** to set or clear; same session/cookie model as swipes.
+  - **UI:** Small control on the card (expandable field or modal) with live **character count** (`n/600`); plain text only.
+  - **GUARDRAILS:** Treat memo as **untrusted text** — no HTML rendering; escape or strip; optional rate limits per user (see **[`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)**).
+
 ## From INITIAL — optional / later (implementation polish)
 
 These were listed under **“Optional / later (not blocking v1)”** in [`INITIAL.md`](INITIAL.md); details stay here so **FEATURES** is the **single backlog index**.

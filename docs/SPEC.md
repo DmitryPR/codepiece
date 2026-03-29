@@ -27,6 +27,13 @@ A fun, Tinder-like game for exploring and learning code by swiping through code 
   - **Right** — Like.
   - **Left** — Skip / dislike.
 
+### Snippet memo (optional personal note)
+
+- A user may attach a **short memo** to a snippet they are viewing — a focused personal comment or learning note (not public chat).
+- **Maximum length: 600 characters** (hard cap at input and storage so answers stay concise).
+- Default intent: **private to that user** for the pair **(user, snippet card)**; visibility or sharing rules are a later product decision unless explicitly opened up.
+- Memos complement swipes: they capture *why* something mattered or what to revisit, without replacing like/skip.
+
 ### 3. Matching
 
 - Match users with:
@@ -40,6 +47,7 @@ A fun, Tinder-like game for exploring and learning code by swiping through code 
 - Track:
   - What users liked or disliked.
   - What they have already seen.
+- Optional **snippet memos** (see above) deepen the loop: short, capped notes tied to specific cards.
 
 ### 5. Internal rating system
 

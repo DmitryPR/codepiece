@@ -32,6 +32,7 @@ Companion to [`SPEC.md`](SPEC.md). These constraints protect users, contributors
 
 - **Do not** execute user-submitted or scraped code in users’ browsers or on your servers without a hardened sandbox and a clear threat model.
 - **Do not** treat embedded snippets as trusted HTML; sanitize rendering to prevent XSS.
+- **Snippet memos** (user-authored notes on a card): store and display as **plain text** only; enforce a **hard length cap** (product: **600 characters**); never interpret as HTML or markdown unless you add a vetted, locked-down renderer later.
 - **Do not** ignore reports of harassment, doxxing, or non-consensual use of someone’s code in the product.
 
 ## Scope (especially for a hackathon)
