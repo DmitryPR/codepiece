@@ -26,6 +26,59 @@ function splitContextSummary(raw: string): { isHeuristic: boolean; text: string 
 
 const SWIPE_THRESHOLD_PX = 72;
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function CopySnippetButton({ snippetText }: { snippetText: string }) {
+  const [copied, setCopied] = useState(false);
+  const onClick = async () => {
+    const ok = await copyToClipboard(snippetText);
+    if (ok) {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Copy code snippet to clipboard"
+      style={{
+        flexShrink: 0,
+        fontSize: 11,
+        padding: '4px 10px',
+        borderRadius: 6,
+        border: '1px solid #536471',
+        background: copied ? '#1a3d2e' : 'transparent',
+        color: copied ? '#6ee7b7' : '#8b98a5',
+        cursor: 'pointer',
+        alignSelf: 'flex-start',
+      }}
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
 export function SwipeClient() {
   const [userReady, setUserReady] = useState(false);
   const [card, setCard] = useState<Card | null | undefined>(undefined);
@@ -211,7 +264,8 @@ export function SwipeClient() {
           border: '1px solid #2f3336',
           overflow: 'hidden',
           touchAction: 'none',
-          userSelect: dragging ? 'none' : 'auto',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
           cursor: dragging ? 'grabbing' : 'grab',
           transform: `translateX(${dragX}px) rotate(${dragX * 0.04}deg)`,
           transition: dragging ? 'none' : 'transform 0.2s ease-out',
@@ -225,13 +279,25 @@ export function SwipeClient() {
       >
       <header style={{ padding: '12px 16px', borderBottom: '1px solid #2f3336' }}>
         <strong>{card.symbolName}</strong>
-        <div style={{ fontSize: 13, opacity: 0.75, marginTop: 4 }}>
-          {ctx.text}
-          {ctx.isHeuristic ? (
-            <span style={{ display: 'block', fontSize: 11, opacity: 0.55, marginTop: 4, fontStyle: 'italic' }}>
-              Auto summary (not author docs)
-            </span>
-          ) : null}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            marginTop: 8,
+            fontSize: 13,
+            opacity: 0.85,
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0, opacity: 0.88 }}>
+            {ctx.text}
+            {ctx.isHeuristic ? (
+              <span style={{ display: 'block', fontSize: 11, opacity: 0.55, marginTop: 4, fontStyle: 'italic' }}>
+                Auto summary (not author docs)
+              </span>
+            ) : null}
+          </div>
+          <CopySnippetButton snippetText={card.snippetText} />
         </div>
       </header>
       <pre

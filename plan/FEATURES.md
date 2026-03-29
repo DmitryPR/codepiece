@@ -61,6 +61,11 @@ These were listed under **“Optional / later (not blocking v1)”** in [`INITIA
 
 Production **Dockerfile**, **`compose.prod.yml`**, **CI** image push, **scan job** pattern, backups — tracked in **[`PRODUCTION.md`](PRODUCTION.md)**. Do not mix that checklist with user-facing **FEATURES** above; link both from **[`README.md`](../README.md)** when documenting releases.
 
+## Shipped UX (swipe card)
+
+- **`user-select: none`** on the draggable card so pointer-drag does not highlight text (copy is intentional via control only).
+- **Copy** next to the context summary copies **`snippet_text`** to the clipboard ([`app/swipe-client.tsx`](../app/swipe-client.tsx) — `CopySnippetButton`, Clipboard API + `execCommand` fallback).
+
 ## See also
 
 - [`docs/SPEC.md`](../docs/SPEC.md) — product goals and mechanics  
