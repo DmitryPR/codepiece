@@ -2,9 +2,9 @@
   "name": "codepiece-hackathon",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 4000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 4000",
     "scan": "bun run src/scan/cli.ts",
     "test": "bun test",
     "test:scan": "bun test src/scan src/lib",

@@ -22,7 +22,7 @@ bun test
 bun run build
 ```
 
-**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:3000](http://localhost:3000)** (or set **`PORT`**). See **[README.md](../README.md)** for the full dev vs production flow.
+**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:4000](http://localhost:4000)** (default port is set in [`package.json`](../package.json)). See **[README.md](../README.md)** for overrides.
 
 ## Environment used in tests
 
@@ -61,7 +61,7 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 
 1. `TARGET_REPO=./samples/mini-algorithms CODEPIECE_DB=data/dev.db bun run scan`
 2. `CODEPIECE_DB=data/dev.db bun run dev`
-3. Open the app, ensure a card appears and Like/Skip hits the API without errors.
+3. Open **[http://localhost:4000](http://localhost:4000)**, ensure a card appears and Like/Skip hits the API without errors.
 
 ## See also
 

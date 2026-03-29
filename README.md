@@ -31,7 +31,9 @@ To **serve** that build locally:
 bun run start   # runs `next start`
 ```
 
-By default the app is available at **[http://localhost:3000](http://localhost:3000)**. Override the port with **`PORT`** (e.g. `PORT=4000 bun run start`). For local development with hot reload, use **`bun run dev`** instead (same default URL unless you pass `-p` / `--port` to `next dev`).
+**Default port is [4000](http://localhost:4000)** (`next dev` / `next start` use **`-p 4000`** in `package.json`) so this app stays off **3000**, where many other Next.js or React apps run. That is a common convention for local side projects, not a framework requirement.
+
+To use another port for one run: **`bun run dev -- -p 3000`** or **`bun run start -- -p 3000`**. To change the default, edit the **`dev`** and **`start`** scripts in [`package.json`](package.json).
 
 Use the **same `CODEPIECE_DB`** for `bun run scan`, `bun run dev`, and `bun run start` so cards and swipes share one SQLite file (default: **`data/codepiece.db`** relative to the repo root).
 
