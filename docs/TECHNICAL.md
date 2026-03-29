@@ -76,4 +76,5 @@ The Next.js app **reads** **Card** rows for the feed; it **never** inserts or up
 
 - **[`SPEC.md`](SPEC.md)** — product behavior and goals.  
 - **[`GUARDRAILS.md`](GUARDRAILS.md)** — license, privacy, and UX constraints that affect implementation choices.  
-- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).
+- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).  
+- **[`AGENTS.md`](AGENTS.md)** — read order and scope rules for LLM / automated implementers.

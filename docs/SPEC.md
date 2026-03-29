@@ -60,5 +60,6 @@ The working name in this spec is **CodePiece**. The repository identifier is **c
 ## See also
 
 - **[`GUARDRAILS.md`](GUARDRAILS.md)** — constraints and anti-patterns (what not to build or optimize for).  
-- **[`technical.md`](technical.md)** — implementation stack, database, ingestion, Docker.  
-- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).
+- **[`TECHNICAL.md`](TECHNICAL.md)** — implementation stack, database, ingestion, Docker.  
+- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).  
+- **[`AGENTS.md`](AGENTS.md)** — read order and scope for LLM implementers.

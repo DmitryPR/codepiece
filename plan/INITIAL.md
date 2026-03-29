@@ -1,6 +1,6 @@
 # CodePiece v1 — agent implementation plan
 
-Pre-review roadmap for implementers and coding agents. Follow **[`docs/technical.md`](../docs/technical.md)** for stack choices; align product behavior with **[`docs/SPEC.md`](../docs/SPEC.md)** and **[`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)**.
+Pre-review roadmap for implementers and coding agents. Follow **[`docs/TECHNICAL.md`](../docs/TECHNICAL.md)** for stack choices; align product behavior with **[`docs/SPEC.md`](../docs/SPEC.md)** and **[`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)**.
 
 ## Purpose and constraints
 
@@ -55,7 +55,7 @@ Implement with one ORM/query layer (Drizzle, Prisma, or Kysely — pick one). Us
 
 1. Walk the target repo tree from a **local path** (env e.g. **`TARGET_REPO`**), i.e. a clone on disk next to or anywhere on the developer machine — **not** fetched over the network by the scanner.
 2. **Exclude** `node_modules`, `dist`, `build`, `.git`, and obvious generated paths/patterns (`*.generated.ts`, etc.).
-3. Parse **`.ts` first**; defer **`.tsx`** to a follow-up if JSX adds noise ([`docs/technical.md`](../docs/technical.md)).
+3. Parse **`.ts` first**; defer **`.tsx`** to a follow-up if JSX adds noise ([`docs/TECHNICAL.md`](../docs/TECHNICAL.md)).
 4. Use **TypeScript compiler API** or **ts-morph** to collect **functions** and **methods** with body **under ~200 lines**; skip oversize symbols; on parse failure, record skip reason in scan memory.
 5. **Context**: prefer JSDoc or first line of a leading block comment; otherwise a short heuristic from name + signature, stored with a flag or prefix so UI can label it as non-author docs.
 6. **Idempotency**: use scan memory + content hash so unchanged files are not fully reprocessed every run.
@@ -85,7 +85,7 @@ Cookie or opaque session id for `userId` is enough for v1. No third-party auth t
 
 ## Runtime: Bun vs Next
 
-Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/technical.md`](../docs/technical.md)). If **Next.js** fails to build or run reliably under Bun in the container, use **Node** only for the Next.js build/dev stage; do not block the hackathon on toolchain edge cases.
+Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/TECHNICAL.md`](../docs/TECHNICAL.md)). If **Next.js** fails to build or run reliably under Bun in the container, use **Node** only for the Next.js build/dev stage; do not block the hackathon on toolchain edge cases.
 
 ## Agent execution order (checklist)
 
@@ -101,4 +101,4 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/technical.
 
 - [`docs/SPEC.md`](../docs/SPEC.md) — product goals and mechanics  
 - [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md) — license, privacy, UX limits  
-- [`docs/technical.md`](../docs/technical.md) — stack and ingestion rules  
+- [`docs/TECHNICAL.md`](../docs/TECHNICAL.md) — stack and ingestion rules  
