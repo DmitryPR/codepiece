@@ -1,0 +1,20 @@
+# Dev-only: no `docker build` — pulls `oven/bun` and runs Next with your tree mounted.
+# First start runs `bun install` inside the container (once per fresh volume).
+
+services:
+  web:
+    image: oven/bun:1
+    working_dir: /app
+    ports:
+      - "4000:4000"
+    environment:
+      CODEPIECE_DB: /data/codepiece.db
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+      - ./data:/data
+    command: ["sh", "-c", "bun install && exec bun run dev -- -H 0.0.0.0"]
+
+volumes:
+  web_node_modules:

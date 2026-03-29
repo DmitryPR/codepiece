@@ -1,11 +1,13 @@
 {
   "name": "codepiece-hackathon",
   "private": true,
+  "packageManager": "bun@1.3.11",
   "scripts": {
     "dev": "next dev -p 4000",
     "build": "next build",
     "start": "next start -p 4000",
     "scan": "bun run src/scan/cli.ts",
+    "seed:samples": "TARGET_REPO=./samples/mini-algorithms bun run src/scan/cli.ts -- --force",
     "test": "bun test",
     "test:scan": "bun test src/scan src/lib",
     "test:web": "bun test tests/web",

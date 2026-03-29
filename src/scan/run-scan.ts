@@ -19,6 +19,8 @@ export type RunScanOptions = {
   memoryPath?: string;
   repoLabel?: string;
   licenseHint?: string;
+  /** Re-read and upsert cards even when scan memory says the file is unchanged (e.g. empty DB after wipe). */
+  force?: boolean;
 };
 
 export function runScan(options?: RunScanOptions): ScanResult {
@@ -33,6 +35,9 @@ export function runScan(options?: RunScanOptions): ScanResult {
   const memoryPath = options?.memoryPath ?? process.env.SCAN_MEMORY_PATH ?? 'data/scan-memory.json';
   const repoLabel = options?.repoLabel ?? process.env.REPO_LABEL ?? basename(absRoot);
   const licenseHint = options?.licenseHint ?? readRepoLicenseHint(absRoot);
+  const force =
+    options?.force ??
+    (process.env.SCAN_FORCE === '1' || process.env.SCAN_FORCE === 'true');
 
   const mem = loadMemory(memoryPath);
   const db = getDb();
@@ -50,7 +55,7 @@ export function runScan(options?: RunScanOptions): ScanResult {
     const content = readFileSync(abs, 'utf8');
     const hash = fileContentHash(content);
     const prev = mem.files[rel];
-    if (prev?.status === 'processed' && prev.contentHash === hash) {
+    if (!force && prev?.status === 'processed' && prev.contentHash === hash) {
       filesSkipped++;
       continue;
     }

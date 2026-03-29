@@ -4,10 +4,11 @@ This file orients coding agents: **what to read first**, **which docs override o
 
 ## Recommended read order
 
-1. **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — implementation checklist, API sketch, data model, Docker flow. **Primary execution contract for v1.**
-2. **[`TECHNICAL.md`](TECHNICAL.md)** — stack details: Bun scanner vs Next.js, `DATABASE_URL`, who writes Cards vs swipes, local scanning.
-3. **[`GUARDRAILS.md`](GUARDRAILS.md)** — hard constraints (attribution, XSS, no dark patterns). Apply to UI and data you store on **Card** rows.
-4. **[`SPEC.md`](SPEC.md)** — product intent and long-term features. **Do not implement everything here in v1** (see conflicts below).
+1. **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — implementation checklist, API sketch, data model. **Primary execution contract for v1 features.**
+2. **[`TECHNICAL.md`](TECHNICAL.md)** — stack details: **Bun** as package manager, **`bun:sqlite`** / **`better-sqlite3`** on **`CODEPIECE_DB`**, Bun scanner vs Next.js, env table, who writes Cards vs swipes, local scanning.
+3. **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)** — when changing **Docker / deploy / rollout** (prod image, **`compose.prod.yml`**, CI). **Not** required for core feature work.
+4. **[`GUARDRAILS.md`](GUARDRAILS.md)** — hard constraints (attribution, XSS, no dark patterns). Apply to UI and data you store on **Card** rows.
+5. **[`SPEC.md`](SPEC.md)** — product intent and long-term features. **Do not implement everything here in v1** (see conflicts below).
 
 ## Authority and scope (avoid scope creep)
 
@@ -17,6 +18,7 @@ This file orients coding agents: **what to read first**, **which docs override o
 | Matching owners/committers, messaging | **Out of scope** (in SPEC narrative but deferred in plan) |
 | OAuth | **Out of scope** — anonymous session only |
 | Card ingestion | **Bun CLI** only; Next.js **reads** Cards, **writes** swipes |
+| Production Docker / rollout | **`plan/PRODUCTION.md`** ( **`plan/INITIAL.md`** is feature-only) |
 
 If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the plan** for v1 and leave SPEC items as future work.
 
@@ -25,12 +27,16 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 ### [`plan/INITIAL.md`](../plan/INITIAL.md) — **strong**
 
 - Ordered checklist, tables, API list, mermaid diagram, explicit in/out of scope.
-- **Gap:** No env var table (`DATABASE_URL`, `TARGET_REPO`) in one place — infer from TECHNICAL or add when implementing. **`TARGET_REPO`** quick default: [`samples/mini-algorithms/`](../samples/mini-algorithms/) (see [`samples/README.md`](../samples/README.md)).
+- Env vars are summarized in **[`TECHNICAL.md`](TECHNICAL.md)**. **`TARGET_REPO`** quick default: [`samples/mini-algorithms/`](../samples/mini-algorithms/) (see [`samples/README.md`](../samples/README.md)).
 
 ### [`TECHNICAL.md`](TECHNICAL.md) — **strong**
 
 - Clear **who writes what** (Bun vs Next.js), DB choices, scanning rules.
 - **Gap:** No copy-paste schema DDL — entities are described in prose + plan table; agents must translate to migrations.
+
+### [`../plan/PRODUCTION.md`](../plan/PRODUCTION.md) — **deploy roadmap**
+
+- **Prod** Dockerfile, **`compose.prod.yml`**, CI push, volume backups, scan job pattern. Dev **`docker-compose.yml`** stays in **README** / **TECHNICAL**.
 
 ### [`GUARDRAILS.md`](GUARDRAILS.md) — **strong for constraints, weak for tasks**
 
@@ -42,9 +48,9 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 - Clear user story and mechanics.
 - **Risk:** Describes matching, internal rating system, and “services” broadly — agents may over-implement. **Always cross-check with INITIAL.**
 
-### [`README.md`](../README.md) — **index only**
+### [`README.md`](../README.md) — **index + quick start**
 
-- Points to docs; no implementation detail. Use for navigation, not behavior.
+- **Quick start** (scan → dev) and **Build and run**; link to **TECHNICAL** for env details.
 
 ## Suggested agent workflow
 
@@ -54,4 +60,4 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 
 ## See also
 
-- **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)**
+- **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**

@@ -49,4 +49,21 @@ export function demo(x: number): number {
     expect(row).toBeDefined();
     expect(row?.snippetText).toContain('return x * 2');
   });
+
+  test('force reprocesses when memory says unchanged', () => {
+    runScan({ targetRepo: root, memoryPath: mem, repoLabel: 'test-repo', licenseHint: 'MIT' });
+    const skip = runScan({ targetRepo: root, memoryPath: mem, repoLabel: 'test-repo', licenseHint: 'MIT' });
+    expect(skip.filesSkipped).toBe(1);
+    expect(skip.cardsUpserted).toBe(0);
+
+    const again = runScan({
+      targetRepo: root,
+      memoryPath: mem,
+      repoLabel: 'test-repo',
+      licenseHint: 'MIT',
+      force: true,
+    });
+    expect(again.filesProcessed).toBe(1);
+    expect(again.cardsUpserted).toBeGreaterThanOrEqual(1);
+  });
 });

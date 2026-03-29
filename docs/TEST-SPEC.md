@@ -8,11 +8,12 @@ Install Bun using the official **[Installation](https://bun.com/docs/installatio
 
 | Command | Purpose |
 |---------|--------|
-| `bun install` | Install dependencies (run once after clone). |
+| `bun install` | Install dependencies (run once after clone). **Use Bun only** — not npm/yarn/pnpm (see [`TECHNICAL.md`](TECHNICAL.md)). |
 | `bun test` | Full suite: scanner unit tests, DB integration, Next API route tests. |
 | `bun run test:scan` | `src/scan` + `src/lib` (scanner + `card-id` unit tests). |
 | `bun run test:web` | Only `tests/web/**/*.test.ts`. |
 | `bun run scan` | CLI smoke (requires `TARGET_REPO` and writable `CODEPIECE_DB` / default `data/`). |
+| `bun run seed:samples` | Loads **`samples/mini-algorithms`** into **`data/codepiece.db`** with **`--force`** (handy after an empty DB + existing scan memory). |
 
 For **complete** local verification before a PR:
 
@@ -24,11 +25,20 @@ bun run build
 
 **`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:4000](http://localhost:4000)** (default port is set in [`package.json`](../package.json)). See **[README.md](../README.md)** for overrides.
 
+**Optional CLI smoke** (writes under `data/` unless you override **`CODEPIECE_DB`**):
+
+```bash
+bun run seed:samples
+```
+
+Or: `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force` if you need **`--force`** explicitly.
+
 ## Environment used in tests
 
 - **`bun test`** runs under the **Bun** runtime: the DB layer uses **`bun:sqlite`** (see [`src/db/client.ts`](../src/db/client.ts)). **`next build` / `next dev`** run on **Node** and use **`better-sqlite3`**. Both hit the same schema and SQL.
 - **`CODEPIECE_DB=:memory:`** — set inside tests so SQLite is isolated; do not rely on `data/codepiece.db` in CI.
 - **`TARGET_REPO`** — only required for manual `bun run scan` or optional e2e (not required for `bun test`).
+- Full env reference: **[`TECHNICAL.md`](TECHNICAL.md)** (“Environment variables”).
 
 ## Scanner tests (`src/scan/*.test.ts`)
 
@@ -59,12 +69,19 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 
 ## Manual smoke (after scan + dev)
 
-1. `TARGET_REPO=./samples/mini-algorithms CODEPIECE_DB=data/dev.db bun run scan`
-2. `CODEPIECE_DB=data/dev.db bun run dev`
-3. Open **[http://localhost:4000](http://localhost:4000)**, ensure a card appears and Like/Skip hits the API without errors.
+1. `bun run seed:samples` (or `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force`)
+2. `bun run dev`
+3. Open **[http://localhost:4000](http://localhost:4000)** — a card should appear; Like/Skip should succeed in the network tab.
+
+## Docker (optional manual check)
+
+1. `docker compose up` (see **[README.md](../README.md)**).
+2. On the **host**, with the same DB path the container uses: `TARGET_REPO=./samples/mini-algorithms CODEPIECE_DB=data/codepiece.db bun run scan`
+3. Reload the app in the browser.
 
 ## See also
 
-- [`TECHNICAL.md`](TECHNICAL.md) — stack and DB ownership.  
-- [`plan/INITIAL.md`](../plan/INITIAL.md) — feature checklist.  
+- [`TECHNICAL.md`](TECHNICAL.md) — stack, DB ownership, environment variables.  
+- [`plan/INITIAL.md`](../plan/INITIAL.md) — feature checklist and **Implementation status**.  
+- [`plan/PRODUCTION.md`](../plan/PRODUCTION.md) — production Docker / Compose rollout (not covered by automated tests here).  
 - [`AGENTS.md`](AGENTS.md) — doc read order for implementers.

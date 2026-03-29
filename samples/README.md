@@ -1,6 +1,6 @@
 # Sample code for scanner testing
 
-Two ways to test **`bun run scan`** (once the CLI exists):
+Two ways to exercise **`bun run scan`**:
 
 ## 1. Bundled mini repo (no clone)
 
@@ -10,11 +10,19 @@ Point **`TARGET_REPO`** at the **absolute or repo-relative path** to:
 samples/mini-algorithms/
 ```
 
-Example (from the `codepiece-hackathon` root):
+From the repo root, the shortcut loads cards into the default DB (**`data/codepiece.db`**):
 
 ```bash
-TARGET_REPO=./samples/mini-algorithms bun run scan
+bun run seed:samples
 ```
+
+Equivalent:
+
+```bash
+TARGET_REPO=./samples/mini-algorithms bun run scan -- --force
+```
+
+(`--force` ensures **Cards** are upserted even when **`data/scan-memory.json`** already lists these files as processed.)
 
 This folder holds a few short `.ts` files with JSDoc-style context so you can validate parsing, card extraction, and DB upserts without network access.
 

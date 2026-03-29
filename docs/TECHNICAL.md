@@ -14,8 +14,8 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Runtime and local development
 
-- The project should **run locally with minimal friction**. **Bun** is an acceptable (and preferred) runtime for scripts, tooling, and the API layer where it simplifies setup and matches team preference. Install from **[bun.com/docs/installation](https://bun.com/docs/installation)**; if `bun` is missing from the shell, see **[Add Bun to your PATH](https://bun.com/docs/installation#add-bun-to-your-path)**.
-- **TypeScript** is the default language for application code (server, ingestion, shared types). Keep the toolchain boring: one package manager/runtime story, clear `package.json` / `bunfig` as needed.
+- **Bun** is the **package manager** for this repo: use **`bun install`**, **`bun run`**, and **`bun test`** only (do not use npm, yarn, or pnpm for installs — they will not match **`bun.lock`**). Install Bun from **[bun.com/docs/installation](https://bun.com/docs/installation)**; if the shell cannot find `bun`, see **[Add Bun to your PATH](https://bun.com/docs/installation#add-bun-to-your-path)**.
+- **TypeScript** is the default for application code (server, ingestion, shared types). The scanner and tests run on **Bun**; **Next.js** dev/build/start use **Node** via the `next` CLI while still invoked through **`bun run`**.
 
 ## UI
 
@@ -24,25 +24,38 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Data storage
 
+### Environment variables
+
+| Variable | Used by | Purpose | Default |
+|----------|---------|---------|---------|
+| **`CODEPIECE_DB`** | Next.js, `bun run scan` | SQLite database file path (`:memory:` allowed in tests) | `data/codepiece.db` |
+| **`TARGET_REPO`** | `bun run scan` only | Absolute or relative path to the tree to scan | *(required for scan)* |
+| **`SCAN_MEMORY_PATH`** | `bun run scan` | JSON scan-memory file for idempotent reruns | `data/scan-memory.json` |
+| **`REPO_LABEL`** | `bun run scan` | Short provenance label stored on **Card** rows | basename of `TARGET_REPO` |
+| **`SCAN_FORCE`** | `bun run scan` | Set to **`1`** or **`true`** to ignore “already processed” scan memory and re-upsert **Cards** (same as **`--force`**) | off |
+
+CLI: **`bun run scan -- --force`** (after **`TARGET_REPO=...`**) reprocesses all files; use when the DB was deleted or replaced but **`data/scan-memory.json`** still says “processed”.
+
+**Storage stack:** one **SQLite** file behind **`CODEPIECE_DB`**. Under **Bun**, the app uses **`bun:sqlite`** (built-in, fast path). Under **Node** (Next.js server), the same file is opened with **`better-sqlite3`**. Same schema and path; pick the driver by runtime.
+
 **Who writes what**
 
-- **`bun run scan`** (Bun) **writes** **Card** rows (and optionally scan-memory tables) into the DB via **`DATABASE_URL`**. It does not record user ratings.
+- **`bun run scan`** (Bun) **writes** **Card** rows (and updates scan memory on disk) into the DB configured by **`CODEPIECE_DB`**. It does not record user ratings.
 - The **running Next.js** app (Route Handlers / server code) **reads** **Card** rows to build the feed (`/api/cards/next`, etc.) and **writes** **ratings / swipes** (and **User** rows) when someone likes or skips — each rating is **persisted in the same database**. It does **not** run the repo scanner or insert **Card** rows.
 
-Pick **Postgres** or any **lightweight relational** store (**SQLite** is fine). Both are valid for v1; Postgres pairs naturally with Docker Compose, SQLite with a single file on disk.
-
-- Use one **simple database** for:
+- Use one **simple SQLite database** (file-backed) for:
   - **Cards** — one row per showable snippet; **inserted/updated only by the Bun scanner**. Next.js **reads** them for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
   - **Users** — minimal profile only (e.g. id + optional display label); **created by Next.js** on first visit / lazy signup. **No OAuth**; no verified GitHub link required for v1.
   - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful; **inserted by Next.js** when the user swipes (e.g. `POST /api/swipes`), not by the Bun scanner.
   - **Seen cards** — enough to avoid showing the same snippet again (or to power recommendations later).
 - Keep a **small schema** — not a distributed data platform.
-- Scanner and Next.js must share the **same `DATABASE_URL`** so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.
+- Scanner and Next.js must share the **same database** (v1: the same **`CODEPIECE_DB`** file) so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.
 
 ## Docker
 
-- **Docker Compose** is mainly for **app + database** (Next.js API/UI + SQLite/Postgres). The **scanner CLI** can run on the **host** with `bun run scan` pointing at a local clone path, or mount that path into a one-off container — keep scanning **local to your checkout**, not a separate cloud service.
-- Developers should be able to run **`docker compose up`** (or the documented equivalent) and hit the Next.js URL without OAuth secrets or provider apps.
+- **Dev:** **`docker-compose.yml`** runs **Next.js dev** inside **`oven/bun:1`** with the project and **`./data`** bind-mounted — no separate DB container. The **scanner CLI** should run on the **host** with **`CODEPIECE_DB=data/codepiece.db`** (or the same path the container uses) so **Cards** and the app share one SQLite file. Alternatively mount your clone and run scan in a one-off container; keep scanning **local to your checkout**, not a separate cloud service.
+- **Production** image + **`compose.prod.yml`** + rollout steps are outlined in **[`plan/PRODUCTION.md`](../plan/PRODUCTION.md)** (not implemented in the dev compose file).
+- Developers should be able to run **`docker compose up`** (dev file) and hit the Next.js URL without OAuth secrets or provider apps.
 
 ## Code ingestion and “cards”
 
@@ -58,16 +71,16 @@ Pick **Postgres** or any **lightweight relational** store (**SQLite** is fine). 
 
 ## Bun scan CLI: memory + card index
 
-Running **`bun run scan`** (local Bun) should do **both** of the following in one tool, writing to **Postgres or your chosen lightweight DB** (same connection the Next.js app uses):
+Running **`bun run scan`** (local Bun) should do **both** of the following in one tool, writing to the **same `CODEPIECE_DB`** SQLite database as the Next.js app:
 
-1. **Scan memory** — update a **memory file** or **DB table** of **processed** vs **skipped** files/symbols (path, reason: too large, generated, parse error, etc.) with **deterministic keys** (repo id + file path + content hash or commit SHA) so reruns are idempotent.
+1. **Scan memory** — update the **JSON memory file** with **processed** vs **skipped** files/symbols (path, reason: too large, generated, parse error, etc.) and **deterministic keys** (repo id + file path + content hash or commit SHA) so reruns are idempotent.
 2. **Card index** — **insert or upsert** rows in the **`Card`** table. That is the authoritative **index of snippets to show**; until the scan has run (or after a fresh DB), the feed may be empty.
 
 The Next.js app **reads** **Card** rows for the feed; it **never** inserts or updates **Card** rows and never parses repos for ingestion. **Card** rows come only from this Bun CLI (for v1). **Ratings** are **written** by Next.js when users swipe.
 
 ## Scan memory (idempotent ingestion)
 
-- The memory artifact (JSON alongside the project, or rows in **Postgres / SQLite**) records what was already scanned and what was skipped. It works together with content hashing so unchanged files are not fully re-mined on every run.
+- The memory artifact is a **JSON file** (v1: **`SCAN_MEMORY_PATH`**) recording what was already scanned and what was skipped. It works together with content hashing so unchanged files are not fully re-mined on every run.
 
 ## What we are not building in v1
 
@@ -81,5 +94,6 @@ The Next.js app **reads** **Card** rows for the feed; it **never** inserts or up
 
 - **[`SPEC.md`](SPEC.md)** — product behavior and goals.  
 - **[`GUARDRAILS.md`](GUARDRAILS.md)** — license, privacy, and UX constraints that affect implementation choices.  
-- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).  
+- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — v1 feature implementation plan.  
+- **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)** — Docker Compose production rollout.  
 - **[`AGENTS.md`](AGENTS.md)** — read order and scope rules for LLM / automated implementers.
