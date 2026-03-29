@@ -1,4 +1,4 @@
-import { desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { Db } from '../db/client';
 import * as schema from '../db/schema';
@@ -26,7 +26,8 @@ export type DashboardStatsPayload = {
 
 const TOP_LIMIT = 15;
 
-export function getDashboardStats(db: Db): DashboardStatsPayload {
+/** Stats for one session user: swipe and memo counts are scoped to `userId`; `cardsTotal` is still the full catalog size. */
+export function getDashboardStats(db: Db, userId: string): DashboardStatsPayload {
   const cardsRow = q(db)
     .select({ n: sql<number>`count(*)`.mapWith(Number) })
     .from(cards)
@@ -34,16 +35,17 @@ export function getDashboardStats(db: Db): DashboardStatsPayload {
   const likesRow = q(db)
     .select({ n: sql<number>`count(*)`.mapWith(Number) })
     .from(swipes)
-    .where(eq(swipes.action, 'like'))
+    .where(and(eq(swipes.userId, userId), eq(swipes.action, 'like')))
     .get();
   const skipsRow = q(db)
     .select({ n: sql<number>`count(*)`.mapWith(Number) })
     .from(swipes)
-    .where(eq(swipes.action, 'skip'))
+    .where(and(eq(swipes.userId, userId), eq(swipes.action, 'skip')))
     .get();
   const memoRow = q(db)
     .select({ n: sql<number>`count(distinct ${snippetMemos.cardId})`.mapWith(Number) })
     .from(snippetMemos)
+    .where(eq(snippetMemos.userId, userId))
     .get();
 
   const rankRows = q(db)
@@ -52,7 +54,7 @@ export function getDashboardStats(db: Db): DashboardStatsPayload {
       likeCount: sql<number>`count(*)`.mapWith(Number),
     })
     .from(swipes)
-    .where(eq(swipes.action, 'like'))
+    .where(and(eq(swipes.userId, userId), eq(swipes.action, 'like')))
     .groupBy(swipes.cardId)
     .orderBy(desc(sql`count(*)`))
     .limit(TOP_LIMIT)

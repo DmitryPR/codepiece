@@ -35,6 +35,17 @@ bun run dev:fresh
 
 Or manually: **`rm -rf .next`** then **`bun run dev`**.
 
+## HTTP 500 in the browser or from `/api/*`
+
+Routes log **`[GET /api/...]`** / **`[POST /api/...]`** and the error in the **terminal where `bun run dev` is running**. Failed API calls often return JSON like **`{ "error": "..." }`** — open DevTools → **Network**, select the red request, **Response**.
+
+| Symptom | What to try |
+|--------|-------------|
+| **500 on `/`** or weird module errors | **`bun run dev:fresh`** (stale Turbopack / `.next` cache). |
+| Error mentions **better-sqlite3**, **bindings**, or **NODE_MODULE_VERSION** | From the repo root run **`bun install`** so the native addon matches your Node version. |
+| **SQLITE_BUSY** or database locked | Two processes writing the same **`CODEPIECE_DB`** (e.g. scan + dev, or two dev servers). Use one writer or separate DB paths. |
+| **500 only in dev**, prod seems fine | Compare **`bun run build && bun run start`** vs **`bun run dev`**; if prod works, prefer **`dev:fresh`** in dev. |
+
 ## Docker: hot reload or edits not showing
 
 The repo bind-mounts your tree into **`oven/bun:1`**. **[`docker-compose.yml`](../docker-compose.yml)** sets **`WATCHPACK_POLLING`** and **`CHOKIDAR_USEPOLLING`** so file watching works on Docker Desktop (macOS/Windows).

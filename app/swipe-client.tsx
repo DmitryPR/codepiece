@@ -7,6 +7,7 @@ import {
   countCodePoints,
   normalizeMemoInput,
 } from '@/src/lib/memo';
+import type { DashboardStatsPayload } from '@/src/lib/dashboard-stats';
 import { useDashboardStats } from './dashboard-context';
 
 const HEURISTIC_PREFIX = '[heuristic] ';
@@ -145,6 +146,251 @@ function CopySnippetButton({ snippetText }: { snippetText: string }) {
     >
       {copied ? <CheckIcon size={17} /> : <CopyIcon size={17} />}
     </button>
+  );
+}
+
+function truncatePathEmpty(s: string, max = 42): string {
+  if (s.length <= max) return s;
+  return `…${s.slice(-(max - 1))}`;
+}
+
+function CodeCommand({ children }: { children: string }) {
+  return (
+    <code
+      style={{
+        display: 'block',
+        marginTop: 10,
+        padding: '12px 14px',
+        borderRadius: 8,
+        fontSize: 13,
+        lineHeight: 1.45,
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+        background: 'var(--cp-bg-deep)',
+        border: '1px solid var(--cp-border)',
+        overflowX: 'auto',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+    >
+      {children}
+    </code>
+  );
+}
+
+function EmptyDeckWelcome({
+  stats,
+  onReloadFeed,
+}: {
+  stats: DashboardStatsPayload | null;
+  onReloadFeed: () => void;
+}) {
+  const [statsSlow, setStatsSlow] = useState(false);
+  useEffect(() => {
+    if (stats !== null) {
+      setStatsSlow(false);
+      return;
+    }
+    const t = window.setTimeout(() => setStatsSlow(true), 3500);
+    return () => window.clearTimeout(t);
+  }, [stats]);
+
+  const hasLibrary = stats !== null && stats.cardsTotal > 0;
+  const title = hasLibrary ? "You're all caught up" : 'Welcome to CodePiece';
+  const subtitle = hasLibrary
+    ? "You've seen every card in the deck. Add more snippets from your machine, then refresh the feed below."
+    : 'Load code snippets from a local repo into this app, then swipe through them here.';
+
+  const top = stats?.topByLikes.slice(0, 5) ?? [];
+  const maxLikes = top.length ? Math.max(...top.map((t) => t.likeCount), 1) : 1;
+
+  return (
+    <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <p style={{ fontSize: 36, lineHeight: 1, margin: '0 0 12px' }} aria-hidden>
+          {hasLibrary ? '✓' : '👋'}
+        </p>
+        <h2 style={{ margin: '0 0 10px', fontSize: '1.5rem', fontWeight: 700 }}>{title}</h2>
+        <p style={{ margin: 0, fontSize: 15, opacity: 0.8, lineHeight: 1.55 }}>{subtitle}</p>
+      </div>
+
+      <section
+        aria-label="Recent activity"
+        style={{
+          background: 'var(--cp-surface)',
+          borderRadius: 12,
+          border: '1px solid var(--cp-border)',
+          padding: '18px 20px',
+          marginBottom: 20,
+          boxShadow: '0 4px 24px var(--cp-shadow)',
+        }}
+      >
+        <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 600, opacity: 0.85 }}>
+          Recent activity
+        </h3>
+        {stats === null ? (
+          <div>
+            <p style={{ margin: 0, fontSize: 14, opacity: 0.65 }}>Loading stats…</p>
+            {statsSlow ? (
+              <p style={{ margin: '10px 0 0', fontSize: 13, opacity: 0.6, lineHeight: 1.45 }}>
+                Still waiting — try the <strong>Stats</strong> button in the header or reload the page.
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+                marginBottom: top.length > 0 ? 18 : 0,
+              }}
+            >
+              {(
+                [
+                  { label: 'Snippets in deck', value: stats.cardsTotal },
+                  { label: 'Your likes', value: stats.likesTotal },
+                  { label: 'Your skips', value: stats.skipsTotal },
+                  { label: 'Your memos', value: stats.cardsWithMemoCount },
+                ] as const
+              ).map((k) => (
+                <div
+                  key={k.label}
+                  style={{
+                    background: 'var(--cp-bg-deep)',
+                    border: '1px solid var(--cp-border)',
+                    borderRadius: 10,
+                    padding: '10px 12px',
+                  }}
+                >
+                  <div style={{ fontSize: 11, opacity: 0.58, marginBottom: 4 }}>{k.label}</div>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 600 }}>{k.value}</div>
+                </div>
+              ))}
+            </div>
+            {top.length > 0 ? (
+              <>
+                <h4
+                  style={{
+                    margin: '0 0 10px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    opacity: 0.72,
+                  }}
+                >
+                  Your snippets by like count
+                </h4>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {top.map((row) => {
+                    const pct = (row.likeCount / maxLikes) * 100;
+                    return (
+                      <li
+                        key={row.cardId}
+                        style={{
+                          marginBottom: 10,
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                          border: '1px solid var(--cp-border)',
+                          background: 'var(--cp-bg-deep)',
+                        }}
+                      >
+                        <div style={{ padding: '8px 10px 6px', fontSize: 12 }}>
+                          <strong>{row.symbolName}</strong>
+                          <span style={{ opacity: 0.55, marginLeft: 6 }}>· {row.repoLabel}</span>
+                          <div
+                            style={{
+                              opacity: 0.62,
+                              fontSize: 11,
+                              marginTop: 2,
+                              wordBreak: 'break-all',
+                            }}
+                          >
+                            {truncatePathEmpty(row.sourcePath)}
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            height: 5,
+                            background: 'var(--cp-surface)',
+                            position: 'relative',
+                          }}
+                        >
+                          <div
+                            style={{
+                              height: '100%',
+                              width: `${pct}%`,
+                              background: 'var(--cp-accent)',
+                            }}
+                          />
+                        </div>
+                        <div style={{ padding: '4px 10px 7px', fontSize: 11, opacity: 0.68 }}>
+                          {row.likeCount} like{row.likeCount === 1 ? '' : 's'}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : stats.likesTotal === 0 && stats.cardsTotal > 0 ? (
+              <p style={{ margin: 0, fontSize: 13, opacity: 0.65 }}>
+                You have not liked anything yet — keep swiping!
+              </p>
+            ) : null}
+          </>
+        )}
+      </section>
+
+      <section
+        aria-label="How to load snippets"
+        style={{
+          background: 'var(--cp-surface)',
+          borderRadius: 12,
+          border: '1px solid var(--cp-border)',
+          padding: '18px 20px',
+          marginBottom: 16,
+        }}
+      >
+        <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, opacity: 0.85 }}>
+          Add snippets on your machine
+        </h3>
+        <p style={{ margin: '0 0 6px', fontSize: 14, opacity: 0.78, lineHeight: 1.5 }}>
+          From the project folder in a terminal, load sample cards or scan any local TypeScript repo:
+        </p>
+        <CodeCommand>bun run seed:samples</CodeCommand>
+        <p style={{ margin: '14px 0 0', fontSize: 13, opacity: 0.72 }}>
+          Or point at your own clone (path to the repo root):
+        </p>
+        <CodeCommand>{'TARGET_REPO=./path/to/your-repo bun run scan'}</CodeCommand>
+        <p style={{ margin: '14px 0 0', fontSize: 13, opacity: 0.72, lineHeight: 1.5 }}>
+          Full options and env vars (e.g. <code style={{ fontSize: 12 }}>CODEPIECE_DB</code>) are in
+          the README.
+        </p>
+        <p style={{ margin: '14px 0 0', fontSize: 13, opacity: 0.78, lineHeight: 1.55 }}>
+          <strong style={{ fontWeight: 600 }}>Memos:</strong> personal notes you attach to a card in
+          this app are saved in the same local database. They stay private to your session. After you
+          add new snippets with the commands above, use <strong>Refresh feed</strong> to keep playing.
+        </p>
+      </section>
+
+      <div style={{ textAlign: 'center' }}>
+        <button
+          type="button"
+          onClick={onReloadFeed}
+          style={{
+            padding: '12px 22px',
+            borderRadius: 10,
+            border: 'none',
+            background: 'var(--cp-accent)',
+            color: 'var(--cp-on-accent)',
+            cursor: 'pointer',
+            fontSize: 15,
+            fontWeight: 600,
+          }}
+        >
+          Refresh feed
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -325,6 +571,11 @@ export function SwipeClient() {
     }
   };
 
+  useEffect(() => {
+    if (!userReady || card !== null) return;
+    dashboard?.refreshDashboard();
+  }, [userReady, card, dashboard]);
+
   if (err) {
     return <p style={{ color: 'var(--cp-error)' }}>{err}</p>;
   }
@@ -335,11 +586,13 @@ export function SwipeClient() {
 
   if (card === null) {
     return (
-      <p style={{ opacity: 0.85 }}>
-        No more cards. Load snippets with{' '}
-        <code style={{ background: 'var(--cp-border)', padding: '2px 6px', borderRadius: 4 }}>bun run seed:samples</code> or{' '}
-        <code style={{ background: 'var(--cp-border)', padding: '2px 6px', borderRadius: 4 }}>TARGET_REPO=… bun run scan</code> (see README).
-      </p>
+      <EmptyDeckWelcome
+        stats={dashboard?.stats ?? null}
+        onReloadFeed={() => {
+          void loadNext();
+          dashboard?.refreshDashboard();
+        }}
+      />
     );
   }
 

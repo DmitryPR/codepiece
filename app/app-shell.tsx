@@ -111,10 +111,10 @@ function DashboardPanel({
                 }}
               >
                 {[
-                  { label: 'Cards', value: stats.cardsTotal },
-                  { label: 'Likes', value: stats.likesTotal },
-                  { label: 'Skips', value: stats.skipsTotal },
-                  { label: 'With memo', value: stats.cardsWithMemoCount },
+                  { label: 'Snippets in deck', value: stats.cardsTotal },
+                  { label: 'Your likes', value: stats.likesTotal },
+                  { label: 'Your skips', value: stats.skipsTotal },
+                  { label: 'Your memos', value: stats.cardsWithMemoCount },
                 ].map((k) => (
                   <div
                     key={k.label}
@@ -131,10 +131,10 @@ function DashboardPanel({
                 ))}
               </div>
               <h3 style={{ margin: '0 0 12px', fontSize: 13, opacity: 0.75, fontWeight: 600 }}>
-                Top snippets by likes
+                Your snippets by like count
               </h3>
               {stats.topByLikes.length === 0 ? (
-                <p style={{ opacity: 0.65, fontSize: 13, margin: 0 }}>No likes yet.</p>
+                <p style={{ opacity: 0.65, fontSize: 13, margin: 0 }}>You have not liked anything yet.</p>
               ) : (
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                   {stats.topByLikes.map((row, i) => {

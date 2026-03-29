@@ -166,7 +166,7 @@ describe('Next.js API routes (integration)', () => {
     expect(res.status).toBe(401);
   });
 
-  test('GET /api/dashboard/stats aggregates swipes and memos', async () => {
+  test('GET /api/dashboard/stats scopes swipes, memos, and rank list to session user', async () => {
     const db = getDb();
     const idA = stableCardId('lab', 'x.ts', 'fn');
     const idB = stableCardId('lab', 'b.ts', 'bar');
@@ -195,6 +195,14 @@ describe('Next.js API routes (integration)', () => {
       .values({ userId: 'user-1', cardId: idA, body: 'note', updatedAt: Date.now() })
       .run();
 
+    /* Other users must not affect this session's dashboard. */
+    recordSwipe(db, 'sw-u2-a', 'user-2', idA, 'like');
+    recordSwipe(db, 'sw-u2-b', 'user-2', idB, 'skip');
+    recordSwipe(db, 'sw-u2-c', 'user-2', idB, 'like');
+    db.insert(snippetMemos)
+      .values({ userId: 'user-2', cardId: idB, body: 'other', updatedAt: Date.now() })
+      .run();
+
     const res = await GET_DASHBOARD_STATS(
       new Request('http://localhost/api/dashboard/stats', {
         headers: { cookie: 'cp_uid=user-1' },
@@ -218,5 +226,22 @@ describe('Next.js API routes (integration)', () => {
     expect(j.topByLikes[0].symbolName).toBe('bar');
     expect(j.topByLikes[1].cardId).toBe(idA);
     expect(j.topByLikes[1].likeCount).toBe(1);
+
+    const res2 = await GET_DASHBOARD_STATS(
+      new Request('http://localhost/api/dashboard/stats', {
+        headers: { cookie: 'cp_uid=user-2' },
+      }),
+    );
+    expect(res2.status).toBe(200);
+    const j2 = (await res2.json()) as {
+      cardsTotal: number;
+      likesTotal: number;
+      skipsTotal: number;
+      cardsWithMemoCount: number;
+    };
+    expect(j2.cardsTotal).toBe(2);
+    expect(j2.likesTotal).toBe(2);
+    expect(j2.skipsTotal).toBe(1);
+    expect(j2.cardsWithMemoCount).toBe(1);
   });
 });

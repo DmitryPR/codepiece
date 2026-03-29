@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -59,7 +60,10 @@ export function DashboardStatsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => clearHighlightTimer(), [clearHighlightTimer]);
 
-  const value: DashboardContextValue = { stats, lastLikedCardId, refreshDashboard };
+  const value = useMemo<DashboardContextValue>(
+    () => ({ stats, lastLikedCardId, refreshDashboard }),
+    [stats, lastLikedCardId, refreshDashboard],
+  );
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 }

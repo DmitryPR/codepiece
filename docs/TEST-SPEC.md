@@ -60,7 +60,7 @@ Or: `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force` if you need 
 
 | File | Covers |
 |------|--------|
-| `api-routes.test.ts` | **Route handlers** imported directly: seed `:memory:` DB + `GET /api/cards/next` (cookie session) + `POST /api/swipes` persistence + empty deck after swipe + 400 on bad action. |
+| `api-routes.test.ts` | **Route handlers** imported directly: seed `:memory:` DB + `GET /api/cards/next` (cookie session) + `POST /api/swipes` persistence + empty deck after swipe + 400 on bad action; `GET /api/dashboard/stats` (session-scoped likes/skips/memos + global card count). |
 
 These tests **do not** start the HTTP server; they call `GET`/`POST` exported functions with `Request` objects.
 

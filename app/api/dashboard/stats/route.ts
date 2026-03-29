@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     }
 
     const db = getDb();
-    const stats = getDashboardStats(db);
+    const stats = getDashboardStats(db, userId);
     return NextResponse.json(stats);
   } catch (err) {
     console.error('[GET /api/dashboard/stats]', err);

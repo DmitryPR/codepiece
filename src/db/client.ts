@@ -30,50 +30,68 @@ export function getSqlitePath(): string {
 
 type BunSqliteCtor = new (path: string) => { exec: (sql: string) => void; close: () => void };
 
+function sqliteOpenError(path: string, phase: string, cause: unknown, hint?: string): Error {
+  const detail = cause instanceof Error ? cause.message : String(cause);
+  const tail =
+    hint ??
+    'Next.js uses better-sqlite3 on Node; after a Node or OS upgrade, run `bun install` from the repo root.';
+  return new Error(`SQLite ${phase} failed (${path}): ${detail} — ${tail}`, {
+    cause: cause instanceof Error ? cause : undefined,
+  });
+}
+
 function openBun(path: string): Cached {
-  // Runtime-only under Bun; Next.js (Node) never enters this branch.
-  const { Database } = require('bun:sqlite') as { Database: BunSqliteCtor };
-  const { drizzle } = require('drizzle-orm/bun-sqlite') as {
-    drizzle: (client: InstanceType<BunSqliteCtor>, config: { schema: typeof schema }) => Db;
-  };
-  const sqlite = new Database(path);
-  sqlite.exec('PRAGMA journal_mode = WAL;');
-  const runMigrations = () => {
-    sqlite.exec(INIT_SQL);
-  };
-  runMigrations();
-  const db = drizzle(sqlite, { schema }) as Db;
-  return {
-    path,
-    db,
-    close: () => sqlite.close(),
-    runMigrations,
-  };
+  try {
+    // Runtime-only under Bun; Next.js (Node) never enters this branch.
+    const { Database } = require('bun:sqlite') as { Database: BunSqliteCtor };
+    const { drizzle } = require('drizzle-orm/bun-sqlite') as {
+      drizzle: (client: InstanceType<BunSqliteCtor>, config: { schema: typeof schema }) => Db;
+    };
+    const sqlite = new Database(path);
+    sqlite.exec('PRAGMA journal_mode = WAL;');
+    const runMigrations = () => {
+      sqlite.exec(INIT_SQL);
+    };
+    runMigrations();
+    const db = drizzle(sqlite, { schema }) as Db;
+    return {
+      path,
+      db,
+      close: () => sqlite.close(),
+      runMigrations,
+    };
+  } catch (e) {
+    throw sqliteOpenError(path, 'open (Bun)', e, 'Check CODEPIECE_DB path and permissions.');
+  }
 }
 
 function openBetter(path: string): Cached {
-  const req = require('better-sqlite3') as { default?: unknown };
-  const Database = (req.default ?? req) as new (path: string) => {
-    pragma: (name: string) => unknown;
-    exec: (sql: string) => void;
-    close: () => void;
-  };
-  const { drizzle } = require('drizzle-orm/better-sqlite3') as {
-    drizzle: (client: InstanceType<typeof Database>, config: { schema: typeof schema }) => Db;
-  };
-  const sqlite = new Database(path);
-  sqlite.pragma('journal_mode = WAL');
-  const runMigrations = () => {
-    sqlite.exec(INIT_SQL);
-  };
-  runMigrations();
-  const db = drizzle(sqlite, { schema }) as Db;
-  return {
-    path,
-    db,
-    close: () => sqlite.close(),
-    runMigrations,
-  };
+  try {
+    const req = require('better-sqlite3') as { default?: unknown };
+    const Database = (req.default ?? req) as new (path: string) => {
+      pragma: (name: string) => unknown;
+      exec: (sql: string) => void;
+      close: () => void;
+    };
+    const { drizzle } = require('drizzle-orm/better-sqlite3') as {
+      drizzle: (client: InstanceType<typeof Database>, config: { schema: typeof schema }) => Db;
+    };
+    const sqlite = new Database(path);
+    sqlite.pragma('journal_mode = WAL');
+    const runMigrations = () => {
+      sqlite.exec(INIT_SQL);
+    };
+    runMigrations();
+    const db = drizzle(sqlite, { schema }) as Db;
+    return {
+      path,
+      db,
+      close: () => sqlite.close(),
+      runMigrations,
+    };
+  } catch (e) {
+    throw sqliteOpenError(path, 'open (Node / better-sqlite3)', e);
+  }
 }
 
 export function getDb(): Db {
@@ -85,7 +103,18 @@ export function getDb(): Db {
 
   if (path !== ':memory:') {
     const dir = dirname(path);
-    if (dir && dir !== '.' && !existsSync(dir)) mkdirSync(dir, { recursive: true });
+    if (dir && dir !== '.' && !existsSync(dir)) {
+      try {
+        mkdirSync(dir, { recursive: true });
+      } catch (e) {
+        throw sqliteOpenError(
+          path,
+          `create parent directory (${dir})`,
+          e,
+          'Fix filesystem permissions or set CODEPIECE_DB to a writable path.',
+        );
+      }
+    }
   }
 
   const isBunRuntime = typeof process !== 'undefined' && Boolean(process.versions?.bun);

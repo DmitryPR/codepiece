@@ -39,7 +39,7 @@ flowchart LR
 ### Internal rating system (“good” / popular code)
 
 - **SPEC:** System to judge which code is good, popular, or valuable.
-- **Partially shipped:** **`GET /api/dashboard/stats`** ([`app/api/dashboard/stats/route.ts`](../app/api/dashboard/stats/route.ts)) returns **snippet-level** aggregates (totals, **with memo** count, **top snippets by like count**) from SQLite via [`dashboard-stats.ts`](../src/lib/dashboard-stats.ts). The **topbar Stats** panel ([`app/app-shell.tsx`](../app/app-shell.tsx)) shows these metrics; after a **like**, the list **refetches** and the row can **reorder** (highlighted row, no motion animations). Rows show **symbol + `repo_label` + path** only (GUARDRAILS: no author leaderboard).
+- **Partially shipped:** **`GET /api/dashboard/stats`** ([`app/api/dashboard/stats/route.ts`](../app/api/dashboard/stats/route.ts)) returns **session-scoped** aggregates from SQLite via [`dashboard-stats.ts`](../src/lib/dashboard-stats.ts): **your** likes/skips/memos and **your** per-card like counts for the ranked list; **snippets in deck** is still the global **`cards`** row count. The **topbar Stats** panel ([`app/app-shell.tsx`](../app/app-shell.tsx)) shows these metrics; after a **like**, the list **refetches** and the row can **reorder** (highlighted row, no motion animations). Rows show **symbol + `repo_label` + path** only (GUARDRAILS: no author leaderboard).
 - **Still random feed:** Next card order remains **`RANDOM()`** in [`feed.ts`](../src/lib/feed.ts) — the dashboard does **not** change **`pickNextCard`**.
 - **Backlog:** Spam / novelty guards; optional **score-biased** feed once product explicitly opts in; richer history UI.
 
