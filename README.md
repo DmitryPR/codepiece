@@ -67,9 +67,7 @@ bun test
 - **[`docs/SPEC.md`](docs/SPEC.md)** — product specification  
 - **[`docs/GUARDRAILS.md`](docs/GUARDRAILS.md)** — what not to do (product guardrails)  
 - **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)** — stack, storage, ingestion, Docker overview  
-- **[`plan/INITIAL.md`](plan/INITIAL.md)** — v1 feature / agent implementation plan  
-- **[`plan/PRODUCTION.md`](plan/PRODUCTION.md)** — Docker Compose production rollout  
-- **[`docs/AGENTS.md`](docs/AGENTS.md)** — how to use these docs as a coding agent  
+- **[`docs/AGENTS.md`](docs/AGENTS.md)** — how to use these docs as a coding agent (includes internal **plan/** read order for implementers)  
 
 ## Sample scan targets
 
