@@ -13,7 +13,7 @@ Pre-review roadmap for implementers and coding agents. Follow **[`docs/technical
 
 **Explicitly defer**
 
-- Full GitHub OAuth (optional stub or plain username string is enough for demos).
+- **Any OAuth** (Google, GitHub, etc.) — v1 uses anonymous/session users only.
 - Matching users to owners/committers, messaging, or contact flows.
 - Parsers for languages other than TypeScript.
 - ML ranking or distributed job queues (see technical “not in v1”).
@@ -36,7 +36,7 @@ flowchart LR
 ```
 
 - **Next.js** hosts the UI and **Route Handlers** (or `/api/*`) so authoritative logic stays server-side ([`docs/technical.md`](../docs/technical.md)).
-- **Scanner** is a **Bun** CLI, run on demand (`docker compose run` or `bun run scan`), not in the hot path of every HTTP request.
+- **Scanner** is a **Bun** CLI run **locally** against a **filesystem path** to a cloned repo (same machine as development). Invoke with `bun run scan` (or a one-off compose run with the repo path **mounted**). No remote ingestion service.
 - **Scan memory** (JSON file or DB rows): deterministic keys (`repoId`, path, `contentHash` or commit SHA) for **processed** vs **skipped** + reason, for idempotent runs.
 
 ## Data model (minimal)
@@ -45,14 +45,14 @@ Implement with one ORM/query layer (Drizzle, Prisma, or Kysely — pick one; **S
 
 | Entity | Fields (conceptual) |
 |--------|---------------------|
-| **User** | `id`, optional `github_username` (string — document impersonation risk for unverified demos), `created_at` |
+| **User** | `id`, optional display label, `created_at` — **no OAuth**; no verified external identity in v1 |
 | **Card** | Stable `id`; `source_path`; `symbol_name`; `snippet_text`; `line_start` / `line_end`; `context_summary` (JSDoc first line or machine-labeled heuristic); **provenance** per GUARDRAILS: `repo_url` or `repo_label`, `license` (string / SPDX when known), optional `commit_sha` |
 | **Swipe** | `user_id`, `card_id`, `action` (`like` \| `skip`), `created_at` |
 | **Seen / feed** | Either derive “seen” from swipes only, or add a `user_card_seen` table if you need impressions without a final swipe — **next-card** must exclude already shown for that user ([`docs/SPEC.md`](../docs/SPEC.md)) |
 
 ## Ingestion pipeline (TypeScript v1)
 
-1. Walk the target repo tree from env e.g. **`TARGET_REPO`**.
+1. Walk the target repo tree from a **local path** (env e.g. **`TARGET_REPO`**), i.e. a clone on disk next to or anywhere on the developer machine — **not** fetched over the network by the scanner.
 2. **Exclude** `node_modules`, `dist`, `build`, `.git`, and obvious generated paths/patterns (`*.generated.ts`, etc.).
 3. Parse **`.ts` first**; defer **`.tsx`** to a follow-up if JSX adds noise ([`docs/technical.md`](../docs/technical.md)).
 4. Use **TypeScript compiler API** or **ts-morph** to collect **functions** and **methods** with body **under ~200 lines**; skip oversize symbols; on parse failure, record skip reason in scan memory.
@@ -63,11 +63,11 @@ Implement with one ORM/query layer (Drizzle, Prisma, or Kysely — pick one; **S
 
 | Method | Path | Purpose |
 |--------|------|--------|
-| `POST` | `/api/users` | Create user (or lazy-create with session); optional `githubUsername` in body |
+| `POST` | `/api/users` | Lazy-create anonymous user (cookie/session); optional display name only — **no OAuth** |
 | `GET` | `/api/cards/next` | Query param `userId` (or session); returns next unseen **Card** or empty |
 | `POST` | `/api/swipes` | JSON: `cardId`, `action` (`like` \| `skip`); associates with current user |
 
-Cookies or a minimal session secret for `userId` are acceptable for v1; document the threat model for demos.
+Cookie or opaque session id for `userId` is enough for v1. No third-party auth tokens.
 
 ## UI work
 
@@ -77,9 +77,9 @@ Cookies or a minimal session secret for `userId` are acceptable for v1; document
 
 ## Docker and local run
 
-- **`docker-compose.yml`**: one **`web`** service (build from repo **`Dockerfile`**); mount volumes for SQLite file (if used), **`scan_memory`**, and optionally the **target repo** path for ingestion.
-- **Flow A**: `docker compose up` — open the documented URL for Next.js.
-- **Flow B**: `docker compose run --rm scanner …` or host **`bun run scan`** against `TARGET_REPO` — keep the compose file **small** (no Redis unless you truly need it).
+- **`docker-compose.yml`**: primarily **`web`** (Next.js + DB). Mount volumes for SQLite (if used) and **`scan_memory`** if the scanner writes inside the project tree.
+- **Flow A**: `docker compose up` — use the app in the browser.
+- **Flow B**: run **`bun run scan`** on the **host** with `TARGET_REPO` pointing at your **local clone** (simplest). Alternatively mount that clone into a one-off scanner container. Scanning stays **local**; no OAuth or cloud scanner.
 
 ## Runtime: Bun vs Next
 
@@ -90,7 +90,7 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/technical.
 1. **Scaffold** the repo: `package.json`, `tsconfig`, flat `src/` (or minimal `apps/web` only if you split later — prefer flat if it stays simpler).
 2. **Database**: schema + migrations; wire SQLite (or Postgres if compose uses a DB service).
 3. **Scanner CLI** + **scan memory** read/write.
-4. **Ingest**: run scanner against `TARGET_REPO` (document sample path or submodule).
+4. **Ingest**: run scanner locally against `TARGET_REPO` (path to a clone on disk; document an example).
 5. **API** routes for users, next card, swipes; verify with **curl** or a tiny test script.
 6. **Next.js** page: card display + swipe + API integration.
 7. **`Dockerfile`** + **`docker-compose.yml`** + short **Quick start** in [`README.md`](../README.md).
