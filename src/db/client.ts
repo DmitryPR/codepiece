@@ -18,6 +18,8 @@ type Cached = {
   path: string;
   close: () => void;
   db: Db;
+  /** Re-run idempotent DDL so new tables (e.g. after a pull) exist without restarting the dev server. */
+  runMigrations: () => void;
 };
 
 let cached: Cached | null = null;
@@ -36,12 +38,16 @@ function openBun(path: string): Cached {
   };
   const sqlite = new Database(path);
   sqlite.exec('PRAGMA journal_mode = WAL;');
-  sqlite.exec(INIT_SQL);
+  const runMigrations = () => {
+    sqlite.exec(INIT_SQL);
+  };
+  runMigrations();
   const db = drizzle(sqlite, { schema }) as Db;
   return {
     path,
     db,
     close: () => sqlite.close(),
+    runMigrations,
   };
 }
 
@@ -57,18 +63,25 @@ function openBetter(path: string): Cached {
   };
   const sqlite = new Database(path);
   sqlite.pragma('journal_mode = WAL');
-  sqlite.exec(INIT_SQL);
+  const runMigrations = () => {
+    sqlite.exec(INIT_SQL);
+  };
+  runMigrations();
   const db = drizzle(sqlite, { schema }) as Db;
   return {
     path,
     db,
     close: () => sqlite.close(),
+    runMigrations,
   };
 }
 
 export function getDb(): Db {
   const path = resolveSqlitePath();
-  if (cached?.path === path) return cached.db;
+  if (cached?.path === path) {
+    cached.runMigrations();
+    return cached.db;
+  }
 
   if (path !== ':memory:') {
     const dir = dirname(path);

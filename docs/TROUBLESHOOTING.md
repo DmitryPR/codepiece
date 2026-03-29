@@ -44,6 +44,12 @@ docker compose up --force-recreate
 
 Run **`bun run scan`** on the **host** with **`CODEPIECE_DB=data/codepiece.db`** so the container sees the same SQLite file as in **`./data`**.
 
+## Internal Server Error / `no such table` after `git pull`
+
+The app applies **`INIT_SQL`** (including new tables like **`snippet_memos`**) on **every** `getDb()` call for the cached connection, so you usually **do not** need a manual migration or **`drizzle-kit push`**.
+
+If you still see errors: **restart** **`bun run dev`** (or the Docker web service). As a last resort, run **`bun run db:push`** against your **`CODEPIECE_DB`** file so Drizzle aligns the file with [`src/db/schema.ts`](../src/db/schema.ts).
+
 ## Empty feed / scan skipped everything
 
 Cards come only from **`bun run scan`**. If **`data/scan-memory.json`** says files are already processed but the DB has no (or old) rows, force a re-upsert:
