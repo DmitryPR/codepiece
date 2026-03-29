@@ -23,7 +23,7 @@ bun test
 bun run build
 ```
 
-**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:4000](http://localhost:4000)** (default port is set in [`package.json`](../package.json)). See **[README.md](../README.md)** for overrides.
+**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:4000](http://localhost:4000)** (default port is set in [`package.json`](../package.json)). Different port or **`dev:webpack`**: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
 
 **Optional CLI smoke** (writes under `data/` unless you override **`CODEPIECE_DB`**):
 
@@ -70,18 +70,19 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 ## Manual smoke (after scan + dev)
 
 1. `bun run seed:samples` (or `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force`)
-2. `bun run dev` (Turbopack + hot reload; **`bun run dev:webpack`** if you need the Webpack dev server)
+2. `bun run dev` (default **4000**, Turbopack). Webpack or port overrides: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
 3. Open **[http://localhost:4000](http://localhost:4000)** — a card should appear; Like/Skip should succeed in the network tab.
 
 ## Docker (optional manual check)
 
 1. `docker compose up` (see **[README.md](../README.md)**).
 2. On the **host**, with the same DB path the container uses: `TARGET_REPO=./samples/mini-algorithms CODEPIECE_DB=data/codepiece.db bun run scan`
-3. Reload the app in the browser.
+3. Reload the app in the browser. Hot reload / restarts: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
 
 ## See also
 
 - [`TECHNICAL.md`](TECHNICAL.md) — stack, DB ownership, environment variables.  
+- [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — ports, Docker, scan, UI.  
 - [`plan/INITIAL.md`](../plan/INITIAL.md) — feature checklist and **Implementation status**.  
 - [`plan/PRODUCTION.md`](../plan/PRODUCTION.md) — production Docker / Compose rollout (not covered by automated tests here).  
 - [`AGENTS.md`](AGENTS.md) — doc read order for implementers.

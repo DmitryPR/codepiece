@@ -50,7 +50,7 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 
 ### [`README.md`](../README.md) — **index + quick start**
 
-- **Quick start** (scan → dev) and **Build and run**; link to **TECHNICAL** for env details.
+- **Quick start** (scan → dev) and **Build and run**; **TECHNICAL** for env; **TROUBLESHOOTING** for ports, Docker, and scan edge cases.
 
 ## Suggested agent workflow
 
@@ -60,4 +60,4 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 
 ## See also
 
-- **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**
+- **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**
