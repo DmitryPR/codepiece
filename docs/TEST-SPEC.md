@@ -24,7 +24,7 @@ bun test
 bun run build
 ```
 
-**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:4000](http://localhost:4000)** (port **4000** in [`package.json`](../package.json)). **`dev:webpack`** (same port) and port conflicts: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
+**`bun run build`** runs **`next build`**: typecheck, lint, and write the production bundle to **`.next/`**. It does not open a URL. To run the built app, use **`bun run start`** and open **[http://localhost:4000](http://localhost:4000)** (port **4000** in [`package.json`](../package.json)). Port conflicts and dev issues: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
 
 **Optional CLI smoke** (writes under `data/` unless you override **`CODEPIECE_DB`**):
 
@@ -71,7 +71,7 @@ The swipe UI (`app/swipe-client.tsx`) is thin; API tests cover the contract it d
 ## Manual smoke (after scan + dev)
 
 1. `bun run seed:samples` (or `TARGET_REPO=./samples/mini-algorithms bun run scan -- --force`)
-2. `bun run dev` (port **4000**, Turbopack). **`dev:webpack`** or **`EADDRINUSE`**: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
+2. `bun run dev` (port **4000**, Turbopack). **`EADDRINUSE`** or stale dev cache: **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**.
 3. Open **[http://localhost:4000](http://localhost:4000)** — a card should appear; Like/Skip should succeed in the network tab.
 
 ## Docker (optional manual check)

@@ -17,7 +17,7 @@ bun run seed:samples
 bun run dev
 ```
 
-Open **[http://localhost:4000](http://localhost:4000)**. Optional env vars (**`CODEPIECE_DB`**, **`SCAN_MEMORY_PATH`**, **`REPO_LABEL`**) are listed in **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)**. If the feed stays empty after a scan, see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
+Wait until the terminal shows **Ready**, then open **[http://localhost:4000](http://localhost:4000)**. This app uses **port 4000** only — **`http://localhost:3000`** will not respond unless you changed the scripts yourself. Optional env vars (**`CODEPIECE_DB`**, **`SCAN_MEMORY_PATH`**, **`REPO_LABEL`**) are listed in **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)**. If the feed stays empty after a scan, see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
 
 ## Build and run
 

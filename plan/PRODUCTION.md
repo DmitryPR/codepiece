@@ -18,7 +18,7 @@ How to take the app from **local / hackathon dev** to a **repeatable Compose-bas
 | **Storage** | **Named volume** (or host path) for **`/data`** holding **`codepiece.db`** (+ WAL/SHM); backups and restore documented. |
 | **Config** | **`CODEPIECE_DB`**, **`PORT`**, **`NODE_ENV=production`** via **env file** or orchestrator secrets; no OAuth secrets in v1. |
 | **Ingestion** | **Job** pattern: scheduled or manual **`bun run scan`** (or dedicated image) with **`TARGET_REPO`** mounted read-only and **shared `CODEPIECE_DB` volume** with **`web`**, or run scan before deploy and ship a seeded volume (trade-off: freshness vs simplicity). |
-| **Rollout** | **Build → tag → push registry → pull on host → `up -d` → smoke** (`curl` health or `/`); document rollback (previous image tag + same volume). |
+| **Rollout** | **Build → tag → push registry → pull on host → `up -d` → smoke** (`curl` **`/`** or **`HEAD /`**); document rollback (previous image tag + same volume). |
 
 ## Suggested execution order
 

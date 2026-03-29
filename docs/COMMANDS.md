@@ -6,7 +6,7 @@ Run from the **repository root** with **[Bun](https://bun.com)**. Install: **`bu
 |--------|----------------|
 | `bun install` | Install dependencies (`bun.lock`). |
 | `bun run dev` | Next.js dev on **4000** only, Turbopack + hot reload. |
-| `bun run dev:webpack` | Dev on **4000** only, Webpack instead of Turbopack. |
+| `bun run dev:fresh` | Same as **`dev`**, but deletes **`.next`** first (fixes rare stale cache issues). |
 | `bun run build` | Production build → `.next/` (typecheck + Next lint). |
 | `bun run start` | Serve production build on **4000** only. |
 | `bun run scan` | Scan **`TARGET_REPO`**; writes **cards** + scan memory. Set **`TARGET_REPO`** (path to a repo or tree). |
