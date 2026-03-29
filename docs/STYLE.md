@@ -2,6 +2,30 @@
 
 This document is the north star for UI work in this project. It complements **[`SPEC.md`](SPEC.md)**, **[`TECHNICAL.md`](TECHNICAL.md)**, and other docs in this folder.
 
+## Brand identity & logo
+
+**Logo asset:** [`public/brand/codepiece-logo.png`](../public/brand/codepiece-logo.png) — full wordmark with icon (**curly brace** + **interlocking puzzle pieces**). Used in the app header ([`app/app-shell.tsx`](../app/app-shell.tsx)): link to **`/`**, **`alt="CodePiece"`**, scaled height **~42px** (width follows aspect ratio).
+
+**Logo-on-black:** The master artwork is designed on **deep black** (`#000000`). On non-black headers, the PNG’s own background still reads as brand-correct; avoid placing the full wordmark on busy patterns.
+
+### Brand palette (from logo)
+
+Use these for **marketing**, **splash**, or **accent experiments** — existing app themes (**classic** / **harmony** / **elegance**) stay the default chrome; pull from here when you want alignment with the logo.
+
+| Role | Approx. hex | Notes |
+|------|-------------|--------|
+| **Blue → cyan (Code / structure)** | `#1e90ff` → `#00e5ff` | “Code” side of wordmark; brace gradient; primary technical accent family. |
+| **Orange → amber (highlights)** | `#ff6b35` → `#ffd166` | Top puzzle piece; warm CTAs or highlights paired with blues. |
+| **Purple → magenta (Piece / module)** | `#7c3aed` → `#e879f9` | Lower puzzle piece; “piece” / module emphasis. |
+| **Deep black (canvas)** | `#000000` | Logo backdrop; strongest brand contrast. |
+
+### Style cues from logo
+
+- **Gradients:** Smooth linear blends (blue↔cyan on structure; orange↔purple on puzzle/wordmark tail). Prefer **subtle** gradients in UI — one accent gradient is enough; do not compete with code blocks.
+- **Shape:** **Rounded** forms (brace, puzzle tabs). Prefer **border-radius** on buttons and panels consistent with existing **`--cp-*`** themes.
+- **Typography (marketing):** Modern **sans-serif**, slightly **oblique** for energy; in-app chrome stays **system UI** unless we introduce a dedicated display font later.
+- **Motifs:** **Modular** / **interlocking** — optional future illustration or empty states; keep the **swipe deck** visually calm per **Principles** below.
+
 ## Themes (user-selectable)
 
 Three palettes are available from the header **Theme** control, persisted under **`localStorage['cp-theme']`**. Valid values: **`classic`** | **`harmony`** | **`elegance`**. **Default** (no saved value): **`classic`** (**Original**) — **`CP_THEME_DEFAULT`** in **`app/theme-context.tsx`**, **`:root`** in **`app/globals.css`**, and the boot script in **`app/layout.tsx`** stay aligned.

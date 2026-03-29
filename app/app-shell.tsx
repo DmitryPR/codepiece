@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { dailyCodingTagline } from './coding-swipe-jokes';
 import { DashboardStatsProvider, useDashboardStats } from './dashboard-context';
 import { ThemePicker } from './theme-picker';
 
@@ -190,11 +191,6 @@ function DashboardPanel({
   );
 }
 
-const titleLinkStyle: CSSProperties = {
-  color: 'inherit',
-  textDecoration: 'none',
-};
-
 const navLinkStyle: CSSProperties = {
   fontSize: 14,
   fontWeight: 600,
@@ -226,16 +222,55 @@ function AppChrome({ children }: { children: ReactNode }) {
           zIndex: 50,
         }}
       >
-        <div style={{ minWidth: 0 }}>
-          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-            <Link href="/" style={titleLinkStyle}>
+        <Link
+          href="/"
+          aria-labelledby="cp-brand-title"
+          style={{
+            minWidth: 0,
+            flex: 1,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 16,
+            color: 'inherit',
+            textDecoration: 'none',
+          }}
+        >
+          <span style={{ flexShrink: 0, lineHeight: 0, alignSelf: 'flex-start' }}>
+            <img
+              src="/brand/codepiece-logo.png"
+              alt=""
+              width={320}
+              height={90}
+              style={{
+                height: 64,
+                width: 'auto',
+                maxWidth: 'min(42vw, 280px)',
+                display: 'block',
+              }}
+            />
+          </span>
+          <div style={{ minWidth: 0, paddingTop: 2 }}>
+            <span
+              id="cp-brand-title"
+              role="heading"
+              aria-level={1}
+              style={{ display: 'block', fontSize: '1.45rem', fontWeight: 700, lineHeight: 1.2 }}
+            >
               CodePiece
-            </Link>
-          </h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.75 }}>
-            {isSwipe ? 'Swipe right to like, left to skip.' : 'Pick a repo on Home, then open Swipe.'}
-          </p>
-        </div>
+            </span>
+            <span
+              style={{
+                display: 'block',
+                margin: '6px 0 0',
+                fontSize: 13,
+                opacity: 0.75,
+                lineHeight: 1.35,
+              }}
+            >
+              {dailyCodingTagline(isSwipe)}
+            </span>
+          </div>
+        </Link>
         <div
           style={{
             display: 'flex',

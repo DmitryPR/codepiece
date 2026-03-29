@@ -1,8 +1,36 @@
 # codepiece-hackathon
 
-Hackathon workspace for **CodePiece** — a swipe-based game for discovering and rating code snippets. Visual direction and palette: **[`docs/STYLE.md`](docs/STYLE.md)**.
+Hackathon workspace for **CodePiece** — swipe through real TypeScript snippets, like or skip, and optionally take private notes. Visual direction: **[`docs/STYLE.md`](docs/STYLE.md)**.
 
-This repo uses **[Bun](https://bun.com)** as the **package manager** and runtime for scripts: **`bun install`**, **`bun test`**, **`bun run scan`**, and **`bun run`** for Next.js. Do not use npm, yarn, or pnpm for installs (they will not respect **`bun.lock`**).
+## What this repo is (spec)
+
+**CodePiece** is a small **swipe-based** app for **discovering and rating code snippets** from a local corpus. A **Bun** CLI **scans** a repo on disk into **SQLite**; **Next.js** serves a **home** screen (pick a **focus repository**, see **progress**) and a **swipe** deck. Sessions are **anonymous** (cookie); **no OAuth**. Attribution stays **symbol / path / repo label** only — see **[`docs/GUARDRAILS.md`](docs/GUARDRAILS.md)**.
+
+Full product intent and mechanics: **[`docs/SPEC.md`](docs/SPEC.md)**.
+
+## Features
+
+### Shipped
+
+- ✅ **Home (`/`)** — choose **focus repo**, **progress** (reviewed / pending), stats snapshot, link to swipe.
+- ✅ **Swipe (`/swipe`)** — card stack, **like / skip** persisted, **drag + buttons**, **copy** snippet.
+- ✅ **Feed** — unswiped cards first from **focus repo** (ordered), then **random** global fallback; or all-random with no focus.
+- ✅ **Snippet memos** — private note per card (600 code points max), **Save** closes popover.
+- ✅ **Stats panel** — slide-over **dashboard** + **library** sidebar (your likes ranking); **symbol / repo / path** only.
+- ✅ **Themes** — picker in chrome.
+- ✅ **Ingestion** — **`bun run scan`** / **`bun run seed:samples`** → **`cards`** in SQLite; bundled **[TheAlgorithms/TypeScript](https://github.com/TheAlgorithms/TypeScript)** sample under [`samples/the-algorithms-typescript/`](samples/the-algorithms-typescript/).
+- ✅ **APIs** — `/api/users`, `/api/cards/next`, `/api/swipes`, `/api/cards/memo`, `/api/dashboard/stats`, `/api/queue`, `/api/cards/browse`.
+- ✅ **Tests** — `bun test`; **`bun run db:clear`** wipes default DB + scan memory for a clean re-seed.
+
+### In progress & backlog
+
+- 🚧 **vs full SPEC** — **personal** stats only (no global popularity feed); **no** “seen without swipe” store; discovery quality is mostly **scan heuristics**, not ML ranking ([`plan/FEATURES.md`](plan/FEATURES.md)).
+- 📋 **Matching / owners** — not in scope (no identity graph).
+- 📋 **Polish** — `.tsx` ingestion, keyboard shortcuts, formal migrations beyond runtime `INIT_SQL`, optional memo listing — see [`plan/FEATURES.md`](plan/FEATURES.md) and [`plan/PRODUCTION.md`](plan/PRODUCTION.md) for ops.
+
+## Tooling: Bun
+
+This repo uses **[Bun](https://bun.com)** as the **package manager** and runtime for scripts: **`bun install`**, **`bun test`**, **`bun run scan`**, and **`bun run`** for Next.js. Do **not** use npm, yarn, or pnpm for installs (they will not respect **`bun.lock`**).
 
 1. **Install Bun** — follow the official **[Installation](https://bun.com/docs/installation)** guide (install script, Homebrew tap `oven-sh/bun/bun`, Docker image, etc.).
 2. **`command not found: bun`** — see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)** (Bun **`PATH`**).
@@ -69,6 +97,7 @@ bun test
 - **[`docs/SPEC.md`](docs/SPEC.md)** — product specification  
 - **[`docs/GUARDRAILS.md`](docs/GUARDRAILS.md)** — what not to do (product guardrails)  
 - **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)** — stack, storage, ingestion, Docker overview  
+- **[`plan/FEATURES.md`](plan/FEATURES.md)** — implementation map vs SPEC (detailed)  
 - **[`docs/AGENTS.md`](docs/AGENTS.md)** — how to use these docs as a coding agent (includes **plan/** read order for implementers)  
 - **[`plan/v1-plan.md`](plan/v1-plan.md)** — execution checklist and API surface
 
