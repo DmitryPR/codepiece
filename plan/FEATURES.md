@@ -17,11 +17,11 @@ flowchart LR
 
 Mapped to **[`docs/SPEC.md`](../docs/SPEC.md)** sections where relevant.
 
-**Home + navigation** — **`/`** ([`app/home-client.tsx`](../app/home-client.tsx)) lets the user pick a **focus repository** (`GET`/`PUT /api/queue` with **`repoLabel`** stored on **`users.focus_repo_label`**), shows **progress in that repo** (reviewed / total and **pending** unswiped count), lists up to **15 upcoming unswiped** snippets for clarity, and a **stats snapshot**. **`/swipe`** is the card stack. Header **CodePiece** links to **`/`**; **Swipe** link on home ([`app/app-shell.tsx`](../app/app-shell.tsx)). Optional **`GET /api/cards/browse`** remains for search/pagination over cards (no queue filter).
+**Home + navigation** — **`/`** ([`app/home-client.tsx`](../app/home-client.tsx)) lets the user pick a **focus repository** (`GET`/`PUT /api/queue` with **`repoLabel`** stored on **`users.focus_repo_label`**), shows **progress in that repo** (reviewed / total and **pending** unswiped count), lists up to **15 upcoming unswiped** snippets for clarity, and a **stats snapshot**. **Memos** opens a slide-over **memo history** (newest first): each row shows your note, symbol, repo/path, and a **truncated code** recap. **`/swipe`** is the card stack. Header **CodePiece** links to **`/`**; **Swipe** link on home ([`app/app-shell.tsx`](../app/app-shell.tsx)). Optional **`GET /api/cards/browse`** remains for search/pagination over cards (no queue filter).
 
 **Interaction (swipe)** — Like and skip are persisted per user (`POST /api/swipes`, **`swipes`** table). Next card (`GET /api/cards/next`) excludes cards the user has already swiped. If **`users.focus_repo_label`** is set, **`pickNextCard`** serves the next **unswiped** card in that repo (stable order by path and symbol); when every card in the repo is already swiped, it **falls back** to **`RANDOM()`** over all remaining unswiped cards globally ([`src/lib/feed.ts`](../src/lib/feed.ts), [`src/lib/queue.ts`](../src/lib/queue.ts)). With no focus, the feed is random over the full unswiped deck. Anonymous session users (`POST /api/users`, cookie). Card stack UI: pointer drag plus Skip/Like buttons ([`app/swipe-client.tsx`](../app/swipe-client.tsx)); **`user-select: none`** on the card so drag does not select text; copy is explicit via control only.
 
-**Snippet memo** — Optional private note per **(user, card)**, max **600** Unicode code points: table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`src/db/init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`memo`** on **`GET /api/cards/next`**; validation [`src/lib/memo.ts`](../src/lib/memo.ts); [`getMemoBody` / `setMemoBody`](../src/lib/feed.ts) in feed. UI: copy icon then memo icon on the title row → popover with textarea, **`n/600`**, Save; popover excluded from swipe capture ([`app/swipe-client.tsx`](../app/swipe-client.tsx)).
+**Snippet memo** — Optional private note per **(user, card)**, max **600** Unicode code points: table **`snippet_memos`** ([`src/db/schema.ts`](../src/db/schema.ts), [`src/db/init-sql.ts`](../src/db/init-sql.ts)); **`PUT /api/cards/memo`** ([`app/api/cards/memo/route.ts`](../app/api/cards/memo/route.ts)); **`GET /api/cards/memos`** ([`app/api/cards/memos/route.ts`](../app/api/cards/memos/route.ts)) lists this user’s memos joined to **cards** ([`src/lib/memo-list.ts`](../src/lib/memo-list.ts)); **`memo`** on **`GET /api/cards/next`**; validation [`src/lib/memo.ts`](../src/lib/memo.ts); [`getMemoBody` / `setMemoBody`](../src/lib/feed.ts) in feed. UI: copy icon then memo icon on the title row → popover with textarea, **`n/600`**, Save; popover excluded from swipe capture ([`app/swipe-client.tsx`](../app/swipe-client.tsx)). Home **Memos** panel for recap.
 
 **Copy snippet** — Title-row control copies **`snippet_text`** (`CopySnippetButton`, Clipboard API + `execCommand` fallback).
 
@@ -65,7 +65,7 @@ These areas match the **spirit** of the spec only in part; details above are aut
 
 ### Snippet memo — optional follow-ups
 
-- Rate limits; “all my memos” listing; stricter grapheme-cluster length for emoji if needed.
+- Rate limits; memo history **pagination** beyond the first page / search; stricter grapheme-cluster length for emoji if needed.
 
 ## Optional polish (not blocking ship)
 

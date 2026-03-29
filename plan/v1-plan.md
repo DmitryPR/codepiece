@@ -71,6 +71,7 @@ Implement with one ORM/query layer (**Drizzle** here). **Bun scanner and Next.js
 | `GET` | `/api/cards/next` | Session cookie; returns next unseen **Card** (or empty); includes **`memo`** when present; honors **`users.focus_repo_label`** when set ([`src/lib/feed.ts`](../src/lib/feed.ts)) |
 | `POST` | `/api/swipes` | JSON: `cardId`, `action` (`like` \| `skip`); **persists** the rating/swipe row in the DB for the current user |
 | `PUT` | `/api/cards/memo` | JSON: `cardId`, `body` (optional plain text, max **600** Unicode code points); upsert or clear per **(user, card)** |
+| `GET` | `/api/cards/memos` | Session cookie; memo history for this user (newest first), joined to **cards** — **`body`**, **`updatedAt`**, symbol/path/repo, **`snippetPreview`** (truncated); query **`limit`** (default **40**, max **100**), **`offset`** |
 | `GET` | `/api/dashboard/stats` | Session-scoped aggregates: your likes/skips/memos, **topByLikes** (your per-card like counts), global **cards** count |
 | `GET` | `/api/queue` | **`repos`** (distinct labels), **`repoLabel`** (current focus), **`progress`** (`total` / `reviewed` / **`pending`** in focus repo), **`pendingPreviews`** |
 | `PUT` | `/api/queue` | JSON body **`repoLabel`**: string or **`null`** (must match a **`cards.repo_label`** when a string) |
@@ -80,7 +81,7 @@ Cookie or opaque session id for `userId` is enough. No third-party auth tokens. 
 
 ## UI work
 
-- **Routes:** **`/`** home — **focus repo** picker, progress + pending previews, stats snapshot, **Start swiping** → **`/swipe`**. **`/swipe`** — card stack (monospace **code**, **context**, **attribution** per [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)).
+- **Routes:** **`/`** home — **focus repo** picker, progress + pending previews, stats snapshot, **Memos** slide-over (memo recap + truncated code), **Start swiping** → **`/swipe`**. **`/swipe`** — card stack (monospace **code**, **context**, **attribution** per [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md)).
 - **Chrome:** **CodePiece** title links to **`/`**; **Swipe** nav on home; sticky header + **Stats** slide-over shared across routes ([`app/app-shell.tsx`](../app/app-shell.tsx)).
 - **Swipe**: pointer/touch gestures plus **left/right buttons** for accessibility.
 - On swipe success, fetch **next** card from the API.

@@ -4,6 +4,209 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useDashboardStats } from './dashboard-context';
 
+type MemoHistoryRow = {
+  cardId: string;
+  body: string;
+  updatedAt: number;
+  symbolName: string;
+  sourcePath: string;
+  repoLabel: string;
+  contextSummary: string;
+  snippetPreview: string;
+};
+
+function MemosHistoryPanel({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [items, setItems] = useState<MemoHistoryRow[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    setLoading(true);
+    setLoadErr(null);
+    void (async () => {
+      try {
+        const r = await fetch('/api/cards/memos?limit=50', { credentials: 'include' });
+        if (!alive) return;
+        if (!r.ok) {
+          setLoadErr((await r.text()) || `HTTP ${r.status}`);
+          setItems([]);
+          return;
+        }
+        const j = (await r.json()) as { memos?: MemoHistoryRow[] };
+        setItems(Array.isArray(j.memos) ? j.memos : []);
+      } catch (e) {
+        if (!alive) return;
+        setLoadErr(e instanceof Error ? e.message : String(e));
+        setItems([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Close memos panel"
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          border: 'none',
+          margin: 0,
+          padding: 0,
+          background: 'var(--cp-overlay)',
+          cursor: 'pointer',
+        }}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="home-memos-title"
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 'min(520px, 100vw)',
+          zIndex: 101,
+          background: 'var(--cp-surface)',
+          borderLeft: '1px solid var(--cp-border)',
+          boxShadow: '-8px 0 32px var(--cp-shadow)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 16px',
+            borderBottom: '1px solid var(--cp-border)',
+            flexShrink: 0,
+          }}
+        >
+          <h2 id="home-memos-title" style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600 }}>
+            Your memos
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--cp-border)',
+              background: 'transparent',
+              color: 'var(--cp-text)',
+              cursor: 'pointer',
+              fontSize: 13,
+            }}
+          >
+            Close
+          </button>
+        </div>
+        <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
+          <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.75, lineHeight: 1.45 }}>
+            Private notes you saved on swipe cards, newest first. Snippet text is truncated for a quick recap.
+          </p>
+          {loadErr ? (
+            <p role="alert" style={{ margin: 0, color: 'var(--cp-error)', fontSize: 14 }}>
+              {loadErr}
+            </p>
+          ) : loading ? (
+            <p style={{ margin: 0, opacity: 0.7 }}>Loading…</p>
+          ) : items.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 14, opacity: 0.75 }}>
+              No memos yet — open <Link href="/swipe">Swipe</Link>, then use the memo control on a card.
+            </p>
+          ) : (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {items.map((m) => (
+                <MemoHistoryCard key={`${m.cardId}-${m.updatedAt}`} m={m} />
+              ))}
+            </ul>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function MemoHistoryCard({ m }: { m: MemoHistoryRow }) {
+  const when = new Date(m.updatedAt);
+  const whenStr = Number.isFinite(when.getTime()) ? when.toLocaleString() : '';
+  return (
+    <li
+      style={{
+        border: '1px solid var(--cp-border)',
+        borderRadius: 'var(--cp-radius-md)',
+        overflow: 'hidden',
+        background: 'var(--cp-bg-deep)',
+      }}
+    >
+      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--cp-border)' }}>
+        <div style={{ fontSize: '1rem', fontWeight: 600 }}>{m.symbolName}</div>
+        <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4, wordBreak: 'break-all' }}>
+          {m.repoLabel} · {m.sourcePath}
+        </div>
+        {whenStr ? (
+          <div style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>Updated {whenStr}</div>
+        ) : null}
+      </div>
+      <div
+        style={{
+          padding: '10px 12px',
+          fontSize: 13,
+          lineHeight: 1.45,
+          borderBottom: '1px solid var(--cp-border)',
+          background: 'var(--cp-accent-subtle)',
+        }}
+      >
+        <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 6 }}>Your note</div>
+        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.body}</div>
+      </div>
+      <div style={{ padding: '10px 12px' }}>
+        <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 6 }}>Code</div>
+        <pre
+          style={{
+            margin: 0,
+            padding: '10px 12px',
+            borderRadius: 'var(--cp-radius-sm)',
+            fontSize: 12,
+            lineHeight: 1.45,
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+            background: 'var(--cp-surface)',
+            border: '1px solid var(--cp-border)',
+            overflowX: 'auto',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            maxHeight: 280,
+            overflowY: 'auto',
+          }}
+        >
+          {m.snippetPreview}
+        </pre>
+      </div>
+    </li>
+  );
+}
+
 type Progress = { total: number; reviewed: number; pending: number };
 
 type PendingPreview = {
@@ -48,6 +251,7 @@ async function ensureSession(): Promise<boolean> {
 export function HomeClient() {
   const dashboard = useDashboardStats();
   const refreshDashboard = dashboard?.refreshDashboard;
+  const [memosOpen, setMemosOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [repos, setRepos] = useState<string[]>([]);
@@ -152,6 +356,7 @@ export function HomeClient() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <MemosHistoryPanel open={memosOpen} onClose={() => setMemosOpen(false)} />
       <header>
         <h2 style={{ margin: '0 0 8px', fontSize: '1.35rem', fontWeight: 700 }}>Home</h2>
         <p style={{ margin: 0, opacity: 0.8, fontSize: 14 }}>
@@ -285,6 +490,9 @@ export function HomeClient() {
         <Link href="/swipe" style={primaryBtn}>
           Start swiping
         </Link>
+        <button type="button" style={btn} onClick={() => setMemosOpen(true)} aria-expanded={memosOpen}>
+          Memos
+        </button>
         <button type="button" style={btn} onClick={() => refreshDashboard?.()}>
           Refresh stats
         </button>

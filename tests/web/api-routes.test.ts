@@ -7,6 +7,7 @@ import { GET as GET_BROWSE } from '../../app/api/cards/browse/route';
 import { GET as GET_NEXT } from '../../app/api/cards/next/route';
 import { GET as GET_DASHBOARD_STATS } from '../../app/api/dashboard/stats/route';
 import { PUT as PUT_MEMO } from '../../app/api/cards/memo/route';
+import { GET as GET_MEMOS } from '../../app/api/cards/memos/route';
 import { GET as GET_QUEUE, PUT as PUT_QUEUE } from '../../app/api/queue/route';
 import { POST as POST_SWIPE } from '../../app/api/swipes/route';
 
@@ -126,6 +127,47 @@ describe('Next.js API routes (integration)', () => {
       }),
     );
     expect(put.status).toBe(404);
+  });
+
+  test('GET /api/cards/memos 401 without user', async () => {
+    const res = await GET_MEMOS(new Request('http://localhost/api/cards/memos'));
+    expect(res.status).toBe(401);
+  });
+
+  test('GET /api/cards/memos empty then populated after memo', async () => {
+    const empty = await GET_MEMOS(
+      new Request('http://localhost/api/cards/memos', { headers: { cookie: 'cp_uid=user-1' } }),
+    );
+    expect(empty.status).toBe(200);
+    const je = (await empty.json()) as { memos: unknown[] };
+    expect(je.memos).toEqual([]);
+
+    const id = stableCardId('lab', 'x.ts', 'fn');
+    await PUT_MEMO(
+      new Request('http://localhost/api/cards/memo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', cookie: 'cp_uid=user-1' },
+        body: JSON.stringify({ cardId: id, body: 'revisit this' }),
+      }),
+    );
+
+    const res = await GET_MEMOS(
+      new Request('http://localhost/api/cards/memos', { headers: { cookie: 'cp_uid=user-1' } }),
+    );
+    expect(res.status).toBe(200);
+    const j = (await res.json()) as {
+      memos: {
+        cardId: string;
+        body: string;
+        snippetPreview: string;
+        symbolName: string;
+      }[];
+    };
+    expect(j.memos.length).toBe(1);
+    expect(j.memos[0].body).toBe('revisit this');
+    expect(j.memos[0].cardId).toBe(id);
+    expect(j.memos[0].symbolName).toBe('fn');
+    expect(j.memos[0].snippetPreview).toContain('export function fn');
   });
 
   test('POST /api/swipes then next card empty', async () => {
