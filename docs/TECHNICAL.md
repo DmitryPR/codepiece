@@ -92,6 +92,7 @@ The Next.js app **reads** **Card** rows for the feed; it **never** inserts or up
 
 ## See also
 
+- **[`../src/COMMANDS.md`](../src/COMMANDS.md)** — **`bun run …`** scripts and typical flows (quick reference).  
 - **[`SPEC.md`](SPEC.md)** — product behavior and goals.  
 - **[`GUARDRAILS.md`](GUARDRAILS.md)** — license, privacy, and UX constraints that affect implementation choices.  
 - **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** — ports, Docker, scan, UI.  

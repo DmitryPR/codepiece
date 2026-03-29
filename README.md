@@ -61,6 +61,7 @@ bun test
 
 ### Docs
 
+- **[`src/COMMANDS.md`](src/COMMANDS.md)** — **`bun run …`** cheat sheet (agents: read with **`docs/AGENTS.md`**)  
 - **[`docs/TEST-SPEC.md`](docs/TEST-SPEC.md)** — test commands and DB/runtime notes  
 - **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)** — ports, Docker, scan, UI quirks  
 - **[`docs/SPEC.md`](docs/SPEC.md)** — product specification  

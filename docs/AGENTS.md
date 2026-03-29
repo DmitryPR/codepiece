@@ -4,6 +4,7 @@ This file orients coding agents: **what to read first**, **which docs override o
 
 ## Recommended read order
 
+0. **[`../src/COMMANDS.md`](../src/COMMANDS.md)** — **copy-paste `bun run …` reference** (dev, scan, tests, DB). Read this first when you need to run or verify anything.
 1. **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — implementation checklist, API sketch, data model. **Primary execution contract for v1 features.**
 2. **[`TECHNICAL.md`](TECHNICAL.md)** — stack details: **Bun** as package manager, **`bun:sqlite`** / **`better-sqlite3`** on **`CODEPIECE_DB`**, Bun scanner vs Next.js, env table, who writes Cards vs swipes, local scanning.
 3. **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)** — when changing **Docker / deploy / rollout** (prod image, **`compose.prod.yml`**, CI). **Not** required for core feature work.
@@ -23,6 +24,10 @@ This file orients coding agents: **what to read first**, **which docs override o
 If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the plan** for v1 and leave SPEC items as future work.
 
 ## Per-file suitability for LLMs
+
+### [`../src/COMMANDS.md`](../src/COMMANDS.md) — **fast lookup**
+
+- Single table of **`package.json`** scripts + minimal env + typical **`bun`** flows. **Does not** replace **TECHNICAL** or **TEST-SPEC** for deep detail.
 
 ### [`plan/INITIAL.md`](../plan/INITIAL.md) — **strong**
 
@@ -54,10 +59,11 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 
 ## Suggested agent workflow
 
-1. Implement in the order of **`plan/INITIAL.md`** checklist.
-2. After each vertical slice, re-read **GUARDRAILS** for anything touching displayed code or user data.
-3. When unsure whether a SPEC feature is v1, **default to omit** unless INITIAL lists it.
+1. Use **`src/COMMANDS.md`** when running **dev**, **scan**, **tests**, or **db:stats** / **db:push** so flags and env match the repo.
+2. Implement in the order of **`plan/INITIAL.md`** checklist.
+3. After each vertical slice, re-read **GUARDRAILS** for anything touching displayed code or user data.
+4. When unsure whether a SPEC feature is v1, **default to omit** unless INITIAL lists it.
 
 ## See also
 
-- **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**
+- **[`../src/COMMANDS.md`](../src/COMMANDS.md)** · **[`SPEC.md`](SPEC.md)** · **[`GUARDRAILS.md`](GUARDRAILS.md)** · **[`TECHNICAL.md`](TECHNICAL.md)** · **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** · **[`../plan/INITIAL.md`](../plan/INITIAL.md)** · **[`../plan/PRODUCTION.md`](../plan/PRODUCTION.md)**
