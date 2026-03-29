@@ -14,7 +14,7 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Runtime and local development
 
-- The project should **run locally with minimal friction**. **Bun** is an acceptable (and preferred) runtime for scripts, tooling, and the API layer where it simplifies setup and matches team preference.
+- The project should **run locally with minimal friction**. **Bun** is an acceptable (and preferred) runtime for scripts, tooling, and the API layer where it simplifies setup and matches team preference. Install from **[bun.com/docs/installation](https://bun.com/docs/installation)**; if `bun` is missing from the shell, see **[Add Bun to your PATH](https://bun.com/docs/installation#add-bun-to-your-path)**.
 - **TypeScript** is the default language for application code (server, ingestion, shared types). Keep the toolchain boring: one package manager/runtime story, clear `package.json` / `bunfig` as needed.
 
 ## UI

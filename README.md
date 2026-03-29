@@ -2,6 +2,20 @@
 
 Hackathon workspace for **CodePiece** — a swipe-based game for discovering and rating code snippets.
 
+This repo uses **[Bun](https://bun.com)** for dependency installs, `bun test`, and `bun run scan`.
+
+1. **Install Bun** — follow the official **[Installation](https://bun.com/docs/installation)** guide (install script, Homebrew tap `oven-sh/bun/bun`, npm, Docker, etc.).
+2. **`command not found: bun`** — add Bun to your shell **`PATH`** as in **[Add Bun to your PATH](https://bun.com/docs/installation#add-bun-to-your-path)** (for example `export BUN_INSTALL="$HOME/.bun"` and `export PATH="$BUN_INSTALL/bin:$PATH"` after the curl installer, or use the path your package manager prints).
+
+Then:
+
+```bash
+bun --version
+bun install
+bun test
+bun run dev
+```
+
 - **[`docs/SPEC.md`](docs/SPEC.md)** — product specification  
 - **[`docs/GUARDRAILS.md`](docs/GUARDRAILS.md)** — what not to do (product guardrails)  
 - **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)** — stack, storage, ingestion, Docker  
