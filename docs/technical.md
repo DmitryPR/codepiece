@@ -19,20 +19,20 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 ## Data storage
 
-**Write path vs read path**
+**Who writes what**
 
-- **`bun run scan`** (Bun) **writes** into the database: **Card** rows (and optionally scan-memory tables), using the same **`DATABASE_URL`** (or equivalent) as the app.
-- The **running Next.js** app **only reads** that database for cards, users, and swipes (Route Handlers / server code). It does not run the repo scanner.
+- **`bun run scan`** (Bun) **writes** **Card** rows (and optionally scan-memory tables) into the DB via **`DATABASE_URL`**. It does not record user ratings.
+- The **running Next.js** app (Route Handlers / server code) **reads** **Card** rows to build the feed (`/api/cards/next`, etc.) and **writes** **ratings / swipes** (and **User** rows) when someone likes or skips — each rating is **persisted in the same database**. It does **not** run the repo scanner or insert **Card** rows.
 
 Pick **Postgres** or any **lightweight relational** store (**SQLite** is fine). Both are valid for v1; Postgres pairs naturally with Docker Compose, SQLite with a single file on disk.
 
 - Use one **simple database** for:
   - **Cards** — one row per showable snippet; **inserted/updated only by the Bun scanner**. Next.js **reads** them for `/api/cards/next` (and similar). This table is the **index of what can appear** in the swipe feed.
-  - **Users** — minimal profile only (e.g. id + optional display label). **No OAuth**; no verified GitHub link required for v1.
-  - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful.
+  - **Users** — minimal profile only (e.g. id + optional display label); **created by Next.js** on first visit / lazy signup. **No OAuth**; no verified GitHub link required for v1.
+  - **Ratings / swipes** — which user liked or skipped which card, timestamps if useful; **inserted by Next.js** when the user swipes (e.g. `POST /api/swipes`), not by the Bun scanner.
   - **Seen cards** — enough to avoid showing the same snippet again (or to power recommendations later).
 - Keep a **small schema** — not a distributed data platform.
-- Scanner and Next.js must share the **same `DATABASE_URL`** so a successful scan immediately **materializes** the card index the running app can serve.
+- Scanner and Next.js must share the **same `DATABASE_URL`** so scans **materialize** cards the app can show, and swipes from the app **land in the same DB** as those cards.
 
 ## Docker
 
@@ -58,7 +58,7 @@ Running **`bun run scan`** (local Bun) should do **both** of the following in on
 1. **Scan memory** — update a **memory file** or **DB table** of **processed** vs **skipped** files/symbols (path, reason: too large, generated, parse error, etc.) with **deterministic keys** (repo id + file path + content hash or commit SHA) so reruns are idempotent.
 2. **Card index** — **insert or upsert** rows in the **`Card`** table. That is the authoritative **index of snippets to show**; until the scan has run (or after a fresh DB), the feed may be empty.
 
-The Next.js app **reads** these rows; it never parses repos on the server for ingestion. **Card** rows come only from this Bun CLI (for v1).
+The Next.js app **reads** **Card** rows for the feed; it **never** inserts or updates **Card** rows and never parses repos for ingestion. **Card** rows come only from this Bun CLI (for v1). **Ratings** are **written** by Next.js when users swipe.
 
 ## Scan memory (idempotent ingestion)
 

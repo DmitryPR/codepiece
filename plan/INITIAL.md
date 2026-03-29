@@ -8,7 +8,7 @@ Pre-review roadmap for implementers and coding agents. Follow **[`docs/technical
 
 - Swipe UX (like / skip) with persistence.
 - Users, swipes, and “seen” cards in a simple relational store.
-- TypeScript-only ingestion: local **`bun run scan`** (Bun) **writes** scan memory and **`Card`** rows into **Postgres or another lightweight DB** (e.g. SQLite); the **running Next.js** app **reads** that database for the swipe feed and APIs.
+- TypeScript-only ingestion: **`bun run scan`** **writes** scan memory and **`Card`** rows to **Postgres or a lightweight DB**; the **Next.js** app **reads** **Cards** for the feed and **writes** **ratings/swipes** (and users) to the **same database** when code is rated.
 - Docker Compose to run the app stack locally.
 
 **Explicitly defer**
@@ -33,9 +33,10 @@ flowchart LR
   cli --> mem
   cli -->|"upsert_Card_rows"| db
   web -->|"read_Cards"| db
+  web -->|"write_swipes_users"| db
 ```
 
-- **Next.js** hosts the UI and **Route Handlers** (or `/api/*`). Server code **reads** **Postgres** (or SQLite, etc.) for `Card`, user, and swipe data; it **does not** run the repo scanner.
+- **Next.js** hosts the UI and **Route Handlers** (or `/api/*`). It **reads** **Card** rows from **Postgres** (or SQLite, etc.) for the feed; it **writes** **swipe/rating** rows (and **User** rows) when the user rates a snippet. It **does not** run the repo scanner or mutate **Card** rows.
 - **`bun run scan`** is a **Bun** CLI run **locally** against `TARGET_REPO`. It **writes** to the **same `DATABASE_URL`** as the app: (1) **scan memory** (file or table) and (2) **`Card`** upserts — the **snippet index** for the feed. No remote ingestion service.
 - Until a scan has populated **Card** rows, `/api/cards/next` may return empty; document this in the README quick start.
 
@@ -66,9 +67,9 @@ Implement with one ORM/query layer (Drizzle, Prisma, or Kysely — pick one). Us
 |--------|------|--------|
 | `POST` | `/api/users` | Lazy-create anonymous user (cookie/session); optional display name only — **no OAuth** |
 | `GET` | `/api/cards/next` | Query param `userId` (or session); returns next unseen **Card** or empty |
-| `POST` | `/api/swipes` | JSON: `cardId`, `action` (`like` \| `skip`); associates with current user |
+| `POST` | `/api/swipes` | JSON: `cardId`, `action` (`like` \| `skip`); **persists** the rating/swipe row in the DB for the current user |
 
-Cookie or opaque session id for `userId` is enough for v1. No third-party auth tokens.
+Cookie or opaque session id for `userId` is enough for v1. No third-party auth tokens. **Every swipe must be stored** so the feed and feedback loop stay consistent with [`docs/SPEC.md`](../docs/SPEC.md).
 
 ## UI work
 
@@ -78,7 +79,7 @@ Cookie or opaque session id for `userId` is enough for v1. No third-party auth t
 
 ## Docker and local run
 
-- **`docker-compose.yml`**: **`web`** (Next.js) + **`db`** (Postgres) is a good default; or SQLite on a mounted volume. Expose the same DB URL to **`bun run scan`** on the host so the scanner **writes** cards the containerized app **reads**.
+- **`docker-compose.yml`**: **`web`** (Next.js) + **`db`** (Postgres) is a good default; or SQLite on a mounted volume. Same **`DATABASE_URL`** for **`bun run scan`** (writes **Cards**) and the app (**reads** **Cards**, **writes** **swipes**).
 - **Flow A**: `docker compose up` — use the app in the browser.
 - **Flow B**: run **`bun run scan`** on the **host** with `TARGET_REPO` pointing at your **local clone** (simplest). Alternatively mount that clone into a one-off scanner container. Scanning stays **local**; no OAuth or cloud scanner.
 
@@ -90,10 +91,10 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/technical.
 
 1. **Scaffold** the repo: `package.json`, `tsconfig`, flat `src/` (or minimal `apps/web` only if you split later — prefer flat if it stays simpler).
 2. **Database**: schema + migrations; **Postgres** (e.g. in Compose) or **SQLite** file — single **`DATABASE_URL`** for both processes.
-3. **Scanner CLI** (`bun run scan`): **scan memory** + **Card** upserts **into that DB** (Bun writes; Next.js reads).
+3. **Scanner CLI** (`bun run scan`): **scan memory** + **Card** upserts (Bun **writes** cards only).
 4. **Ingest**: run scanner locally against `TARGET_REPO`; confirm **Card** count increases and `/api/cards/next` returns data (document in README).
-5. **API** routes for users, next card, swipes; verify with **curl** or a tiny test script.
-6. **Next.js** page: card display + swipe + API integration.
+5. **API** routes: user lazy-create, next card, **`POST /api/swipes`** **persisting** ratings to the DB; verify with **curl** or a tiny test script.
+6. **Next.js** page: card display + swipe + API integration (swipe calls API so ratings are stored).
 7. **`Dockerfile`** + **`docker-compose.yml`** + short **Quick start** in [`README.md`](../README.md).
 
 ## See also
