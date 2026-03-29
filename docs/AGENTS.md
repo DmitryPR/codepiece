@@ -25,7 +25,7 @@ If **`SPEC.md`** and **`plan/INITIAL.md`** disagree on features, **follow the pl
 ### [`plan/INITIAL.md`](../plan/INITIAL.md) — **strong**
 
 - Ordered checklist, tables, API list, mermaid diagram, explicit in/out of scope.
-- **Gap:** No env var table (`DATABASE_URL`, `TARGET_REPO`) in one place — infer from TECHNICAL or add when implementing.
+- **Gap:** No env var table (`DATABASE_URL`, `TARGET_REPO`) in one place — infer from TECHNICAL or add when implementing. **`TARGET_REPO`** quick default: [`samples/mini-algorithms/`](../samples/mini-algorithms/) (see [`samples/README.md`](../samples/README.md)).
 
 ### [`TECHNICAL.md`](TECHNICAL.md) — **strong**
 

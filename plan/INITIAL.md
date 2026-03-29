@@ -92,7 +92,7 @@ Prefer **Bun** for the scanner CLI and any standalone scripts ([`docs/TECHNICAL.
 1. **Scaffold** the repo: `package.json`, `tsconfig`, flat `src/` (or minimal `apps/web` only if you split later — prefer flat if it stays simpler).
 2. **Database**: schema + migrations; **Postgres** (e.g. in Compose) or **SQLite** file — single **`DATABASE_URL`** for both processes.
 3. **Scanner CLI** (`bun run scan`): **scan memory** + **Card** upserts (Bun **writes** cards only).
-4. **Ingest**: run scanner locally against `TARGET_REPO`; confirm **Card** count increases and `/api/cards/next` returns data (document in README).
+4. **Ingest**: run scanner locally against `TARGET_REPO` — start with **[`samples/mini-algorithms/`](../samples/mini-algorithms/)**, then optionally **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)** (see [`samples/README.md`](../samples/README.md)); confirm **Card** count increases and `/api/cards/next` returns data.
 5. **API** routes: user lazy-create, next card, **`POST /api/swipes`** **persisting** ratings to the DB; verify with **curl** or a tiny test script.
 6. **Next.js** page: card display + swipe + API integration (swipe calls API so ratings are stored).
 7. **`Dockerfile`** + **`docker-compose.yml`** + short **Quick start** in [`README.md`](../README.md).

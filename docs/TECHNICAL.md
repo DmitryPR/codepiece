@@ -7,6 +7,11 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 - **No OAuth** — no Google, GitHub, or other social login for v1. Use an **anonymous session** (cookie + server-side `user` row) or a single local “player” record. Optional **display name** is fine; do not verify identities.
 - **Scanning is local** — the scanner runs **on the same machine** where you work, against a **filesystem path** to a cloned repo (e.g. `TARGET_REPO=/path/to/clone`). There is no hosted crawler or remote ingestion service in v1.
 
+## Sample projects for testing
+
+- **In-repo:** [`samples/mini-algorithms/`](../samples/mini-algorithms/) — a few short TypeScript modules with JSDoc, meant for **`TARGET_REPO=./samples/mini-algorithms`** (from the hackathon repo root). See [`samples/README.md`](../samples/README.md).
+- **External (recommended for scale):** clone **[Lugriz/typescript-algorithms](https://github.com/Lugriz/typescript-algorithms)** (MIT, educational algorithms in TS/JS) and set **`TARGET_REPO`** to that directory. Large `src/` tree; still exclude `node_modules` / build output per ingestion rules.
+
 ## Runtime and local development
 
 - The project should **run locally with minimal friction**. **Bun** is an acceptable (and preferred) runtime for scripts, tooling, and the API layer where it simplifies setup and matches team preference.
