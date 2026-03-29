@@ -85,6 +85,7 @@ Production **Dockerfile**, **`compose.prod.yml`**, **CI** image push, **scan job
 - [`docs/SPEC.md`](../docs/SPEC.md) — product goals and mechanics (high level)  
 - [`docs/GUARDRAILS.md`](../docs/GUARDRAILS.md) — constraints (social, ratings, attribution)  
 - [`v1-plan.md`](v1-plan.md) — execution checklist and implementation status  
+- [`VISUAL-POLISH.md`](VISUAL-POLISH.md) — visual polish plan (STYLE.md alignment; [`agents/planner.md`](../agents/planner.md) format)  
 - [`PRODUCTION.md`](PRODUCTION.md) — production Compose rollout  
 - [`docs/TECHNICAL.md`](../docs/TECHNICAL.md) — stack, DB, ingestion  
 - [`docs/AGENTS.md`](../docs/AGENTS.md) — read order for implementers  

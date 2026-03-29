@@ -39,6 +39,7 @@
     "node_modules",
     "**/*.test.ts",
     "tests",
-    "src/db/db-stats.ts"
+    "src/db/db-stats.ts",
+    "samples"
   ]
 }

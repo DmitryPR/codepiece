@@ -2,6 +2,12 @@
   box-sizing: border-box;
 }
 
+:root {
+  --cp-radius-sm: 8px;
+  --cp-radius-md: 10px;
+  --cp-radius-lg: 12px;
+}
+
 /* Default / Original — first-ship dark UI (also html[data-cp-theme='classic']) */
 :root,
 html[data-cp-theme='classic'] {
@@ -78,4 +84,16 @@ body {
   background: var(--cp-body-bg, var(--cp-bg-deep));
   color: var(--cp-text);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  --cp-card-elev: 0 6px 32px var(--cp-shadow);
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cp-accent) 72%, transparent);
+  outline-offset: 2px;
 }

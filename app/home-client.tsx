@@ -162,7 +162,7 @@ export function HomeClient() {
       </header>
 
       {err ? (
-        <p role="alert" style={{ margin: 0, color: 'var(--cp-danger, #c00)', fontSize: 14 }}>
+        <p role="alert" style={{ margin: 0, color: 'var(--cp-error)', fontSize: 14 }}>
           {err}
         </p>
       ) : null}

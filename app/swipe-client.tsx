@@ -154,6 +154,34 @@ function truncatePathEmpty(s: string, max = 42): string {
   return `…${s.slice(-(max - 1))}`;
 }
 
+/** Decorative hero for empty deck — stroke icons only (STYLE.md). */
+function EmptyDeckHero({ caughtUp }: { caughtUp: boolean }) {
+  if (caughtUp) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }} aria-hidden>
+        <svg width={56} height={56} viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="22" stroke="var(--cp-accent)" strokeWidth={1.75} opacity={0.42} />
+          <path
+            d="M18 28.5 24.5 35 38 21"
+            stroke="var(--cp-accent)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }} aria-hidden>
+      <svg width={56} height={56} viewBox="0 0 56 56" fill="none">
+        <rect x="12" y="8" width="30" height="38" rx={5} stroke="var(--cp-muted)" strokeWidth={1.5} opacity={0.4} />
+        <rect x="16" y="12" width="30" height="38" rx={5} stroke="var(--cp-accent)" strokeWidth={1.75} opacity={0.5} />
+      </svg>
+    </div>
+  );
+}
+
 function CodeCommand({ children }: { children: string }) {
   return (
     <code
@@ -206,9 +234,7 @@ function EmptyDeckWelcome({
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <p style={{ fontSize: 36, lineHeight: 1, margin: '0 0 12px' }} aria-hidden>
-          {hasLibrary ? '✓' : '👋'}
-        </p>
+        <EmptyDeckHero caughtUp={hasLibrary} />
         <h2 style={{ margin: '0 0 10px', fontSize: '1.5rem', fontWeight: 700 }}>{title}</h2>
         <p style={{ margin: 0, fontSize: 15, opacity: 0.8, lineHeight: 1.55 }}>{subtitle}</p>
       </div>
@@ -632,6 +658,13 @@ export function SwipeClient() {
   };
 
   const hintOpacity = Math.min(1, Math.abs(dragX) / SWIPE_THRESHOLD_PX);
+  const dragInset =
+    dragX > 20
+      ? `inset 0 0 0 2px color-mix(in srgb, var(--cp-accent) ${hintOpacity * 55}%, transparent)`
+      : dragX < -20
+        ? `inset 0 0 0 2px color-mix(in srgb, var(--cp-swipe-skip) ${hintOpacity * 45}%, transparent)`
+        : '';
+  const cardBoxShadow = dragInset ? `var(--cp-card-elev), ${dragInset}` : 'var(--cp-card-elev)';
 
   return (
     <div>
@@ -646,7 +679,7 @@ export function SwipeClient() {
         onPointerCancel={endPointer}
         style={{
           background: 'var(--cp-surface)',
-          borderRadius: 12,
+          borderRadius: 'var(--cp-radius-lg)',
           border: '1px solid var(--cp-border)',
           overflow: 'hidden',
           touchAction: 'none',
@@ -654,12 +687,7 @@ export function SwipeClient() {
           WebkitUserSelect: 'none',
           cursor: dragging ? 'grabbing' : 'grab',
           transform: `translateX(${dragX}px) rotate(${dragX * 0.04}deg)`,
-          boxShadow:
-            dragX > 20
-              ? `inset 0 0 0 2px color-mix(in srgb, var(--cp-accent) ${hintOpacity * 55}%, transparent)`
-              : dragX < -20
-                ? `inset 0 0 0 2px color-mix(in srgb, var(--cp-swipe-skip) ${hintOpacity * 45}%, transparent)`
-                : undefined,
+          boxShadow: cardBoxShadow,
         }}
       >
       <header

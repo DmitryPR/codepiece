@@ -4,7 +4,7 @@ This document is the north star for UI work in this project. It complements **[`
 
 ## Brand identity & logo
 
-**Logo asset:** [`public/brand/codepiece-logo.png`](../public/brand/codepiece-logo.png) — full wordmark with icon (**curly brace** + **interlocking puzzle pieces**). Used in the app header ([`app/app-shell.tsx`](../app/app-shell.tsx)): link to **`/`**, **`alt="CodePiece"`**, scaled height **~42px** (width follows aspect ratio).
+**Logo asset:** [`public/brand/codepiece-logo.png`](../public/brand/codepiece-logo.png) — full wordmark with icon (**curly brace** + **interlocking puzzle pieces**). Used in the app header ([`app/app-shell.tsx`](../app/app-shell.tsx)): link to **`/`**, decorative image with **`alt=""`**, scaled height **~64px** (width follows aspect ratio; `max-width` caps on narrow viewports).
 
 **Logo-on-black:** The master artwork is designed on **deep black** (`#000000`). On non-black headers, the PNG’s own background still reads as brand-correct; avoid placing the full wordmark on busy patterns.
 
@@ -30,7 +30,7 @@ Use these for **marketing**, **splash**, or **accent experiments** — existing 
 
 Three palettes are available from the header **Theme** control, persisted under **`localStorage['cp-theme']`**. Valid values: **`classic`** | **`harmony`** | **`elegance`**. **Default** (no saved value): **`classic`** (**Original**) — **`CP_THEME_DEFAULT`** in **`app/theme-context.tsx`**, **`:root`** in **`app/globals.css`**, and the boot script in **`app/layout.tsx`** stay aligned.
 
-**`html[data-cp-theme="…"]`** selects variables in **`app/globals.css`**. A **`beforeInteractive`** script applies the saved theme before paint.
+**`html[data-cp-theme="…"]`** selects variables in **`app/globals.css`**. **`next/script`** with **`strategy="beforeInteractive"`** and **`src="/theme-boot.js"`** (see **`public/theme-boot.js`**) applies the saved theme from **`localStorage`** before paint — avoids inline script nodes in the RSC tree (React 19 warnings + hydration noise next to flight `<script>` tags).
 
 | `data-cp-theme` | Label in UI | Source |
 |-----------------|-------------|--------|
@@ -82,7 +82,7 @@ Approximates the UI before PDF palettes: Twitter-adjacent dark grays, **`#1d9bf0
 
 ## Concrete cues
 
-- **Surfaces:** Page uses **`--cp-body-bg`** (falls back to **`--cp-bg-deep`**); recessed areas and header strip use **`--cp-bg-deep`**; cards/panels use **`--cp-surface`**. Borders from **`--cp-border`** / **`--cp-border-input`**.
+- **Surfaces:** Page uses **`--cp-body-bg`** (falls back to **`--cp-bg-deep`**); recessed areas and header strip use **`--cp-bg-deep`**; cards/panels use **`--cp-surface`**. Borders from **`--cp-border`** / **`--cp-border-input`**. Shared radii: **`--cp-radius-sm`**, **`--cp-radius-md`**, **`--cp-radius-lg`**; main swipe card elevation uses **`--cp-card-elev`** on **`body`** (derived from **`--cp-shadow`**).
 - **Type:** System UI for chrome; code stays in `<pre>` / monospace. Keep labels short.
 - **Icons:** Stroke-based, ~2px weight, round caps and joins—same family as the copy control. No emoji for primary actions.
 - **Accent:** Sparingly—`--cp-accent` for primary actions and memo; **`--cp-swipe-skip`** for left-swipe feedback; **`--cp-error`** / **`--cp-success`** where appropriate.

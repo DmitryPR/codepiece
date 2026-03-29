@@ -12,6 +12,25 @@ function truncatePath(s: string, max = 36): string {
   return `…${s.slice(-(max - 1))}`;
 }
 
+/** Bar chart — matches stroke icon family (STYLE.md). */
+function StatsIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 20V10M10 20V4M16 20v-6M22 20V12" />
+    </svg>
+  );
+}
+
 function DashboardPanel({
   open,
   onClose,
@@ -259,6 +278,7 @@ function AppChrome({ children }: { children: ReactNode }) {
               CodePiece
             </span>
             <span
+              suppressHydrationWarning
               style={{
                 display: 'block',
                 margin: '6px 0 0',
@@ -306,7 +326,9 @@ function AppChrome({ children }: { children: ReactNode }) {
               fontSize: 14,
             }}
           >
-            <span aria-hidden>📊</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 6 }} aria-hidden>
+              <StatsIcon size={17} />
+            </span>
             Stats
           </button>
         </div>
