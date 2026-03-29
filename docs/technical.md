@@ -51,4 +51,5 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 ## See also
 
 - **[`SPEC.md`](SPEC.md)** — product behavior and goals.  
-- **[`GUARDRAILS.md`](GUARDRAILS.md)** — license, privacy, and UX constraints that affect implementation choices.
+- **[`GUARDRAILS.md`](GUARDRAILS.md)** — license, privacy, and UX constraints that affect implementation choices.  
+- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).

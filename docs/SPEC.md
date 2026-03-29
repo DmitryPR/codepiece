@@ -55,9 +55,10 @@ A fun, Tinder-like game for exploring and learning code by swiping through code 
 
 ## Naming note
 
-The working name in this spec is **CodePiece**. The repository identifier is **codepience-hackathon** (as chosen for the hackathon workspace).
+The working name in this spec is **CodePiece**. The repository identifier is **codepiece-hackathon**.
 
 ## See also
 
 - **[`GUARDRAILS.md`](GUARDRAILS.md)** — constraints and anti-patterns (what not to build or optimize for).  
-- **[`technical.md`](technical.md)** — implementation stack, database, ingestion, Docker.
+- **[`technical.md`](technical.md)** — implementation stack, database, ingestion, Docker.  
+- **[`../plan/INITIAL.md`](../plan/INITIAL.md)** — agent implementation plan (v1).
