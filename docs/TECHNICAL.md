@@ -36,7 +36,7 @@ Companion to [`SPEC.md`](SPEC.md) and [`GUARDRAILS.md`](GUARDRAILS.md). This des
 
 CLI: **`bun run scan -- --force`** (after **`TARGET_REPO=...`**) reprocesses all files; use when the DB was deleted or replaced but **`data/scan-memory.json`** still says “processed”.
 
-**Storage stack:** one **SQLite** file behind **`CODEPIECE_DB`**. Under **Bun**, the app uses **`bun:sqlite`** (built-in, fast path). Under **Node** (Next.js server), the same file is opened with **`better-sqlite3`**. Same schema and path; pick the driver by runtime.
+**Storage stack:** one **SQLite** file behind **`CODEPIECE_DB`**. Under **Bun**, the app uses **`bun:sqlite`** (built-in, fast path). Under **Node** (Next.js server), the same file is opened with **`better-sqlite3`**. Same schema and path; pick the driver by runtime. **`bun run db:stats`** opens that file **read-only** (Bun) and prints row counts, swipe breakdowns, and on-disk **WAL** / **shm** sizes — see **[README.md](../README.md)**.
 
 **Who writes what**
 

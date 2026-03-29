@@ -44,6 +44,8 @@ bun run start
 
 Use the **same `CODEPIECE_DB`** for **`bun run scan`**, **`bun run dev`**, and **`bun run start`** (default **`data/codepiece.db`**). SQLite is opened via **Bun** or **Node** depending on the process — see **[`docs/TECHNICAL.md`](docs/TECHNICAL.md)**.
 
+**Inspect the DB (read-only):** **`bun run db:stats`** prints row counts (**users**, **cards**, **swipes**), swipe totals by **action**, per-user swipe counts, **cards** grouped by **`repo_label`**, SQLite logical size, and on-disk sizes for the main file, **WAL**, and **shm**. Uses **`CODEPIECE_DB`**; fails fast if the path is **`:memory:`** or missing.
+
 **Ports, Docker file-watching, `scan --force`, and other fixes:** **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
 
 ### Docker (optional)

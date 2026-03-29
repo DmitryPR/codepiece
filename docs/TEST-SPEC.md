@@ -14,6 +14,7 @@ Install Bun using the official **[Installation](https://bun.com/docs/installatio
 | `bun run test:web` | Only `tests/web/**/*.test.ts`. |
 | `bun run scan` | CLI smoke (requires `TARGET_REPO` and writable `CODEPIECE_DB` / default `data/`). |
 | `bun run seed:samples` | Loads **`samples/mini-algorithms`** into **`data/codepiece.db`** with **`--force`** (handy after an empty DB + existing scan memory). |
+| `bun run db:stats` | Read-only SQLite summary (**`CODEPIECE_DB`**): counts, swipes by action, per-user swipes, cards by **`repo_label`**, file sizes. |
 
 For **complete** local verification before a PR:
 

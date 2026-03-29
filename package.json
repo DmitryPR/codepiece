@@ -12,7 +12,8 @@
     "test": "bun test",
     "test:scan": "bun test src/scan src/lib",
     "test:web": "bun test tests/web",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:stats": "bun run src/db/db-stats.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
